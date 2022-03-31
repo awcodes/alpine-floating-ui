@@ -1,0 +1,34 @@
+{
+  "name": "@awcodes/alpine-floating-ui",
+  "version": "1.0.0",
+  "description": "Add Floating UI functionality to Alpine 3.x components.",
+  "keywords": [
+    "AlpineJS",
+    "Floating UI"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/awcodes/alpine-floating-ui"
+  },
+  "author": {
+    "name": "Adam Weston",
+    "email": "awcodes1@gmail.com",
+    "url": "https://www.awcodes.com"
+  },
+  "main": "dist/module.cjs.js",
+  "module": "dist/module.esm.js",
+  "type": "module",
+  "devDependencies": {
+    "@floating-ui/dom": "^0.4.2",
+    "@types/jest": "^27.4.1",
+    "alpinejs": "^3.9.5",
+    "brotli-size": "^4.0.0",
+    "esbuild": "^0.14.29",
+    "jest": "^27.5.1"
+  },
+  "scripts": {
+    "test": "npm run build && node --experimental-vm-modules node_modules/.bin/jest",
+    "build": "node ./scripts/build.js",
+    "watch": "node ./scripts/build.js --watch"
+  }
+}
