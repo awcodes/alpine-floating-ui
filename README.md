@@ -2,8 +2,6 @@
 
 Add Floating UI functionality to Alpine 3.x components.
 
-> This package is still in development
-
 > This package only supports Alpine v3.x.
 
 ## About

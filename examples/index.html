@@ -1,31 +1,65 @@
 <html>
-
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Alpine.js Floating UI</title>
-    <link rel="stylesheet" href="https://unpkg.com/tippy.js@6.3.1/dist/tippy.css">
     <script type="module">
-        import FloatingUI from '/dist/module.esm.js'
+      import FloatingUI from "/dist/module.esm.js";
 
-        document.addEventListener('alpine:initializing', () => {
-            FloatingUI(window.Alpine)
-        })
+      document.addEventListener("alpine:initializing", () => {
+        FloatingUI(window.Alpine);
+      });
     </script>
     <script src="https://cdn.jsdelivr.net/gh/alpinejs/alpine-next/packages/alpinejs/dist/cdn.min.js" defer></script>
-</head>
 
-<body x-data="{ content: 'Hello!' }">
-    <button x-tooltip.on.click="content">
-        Click me!
-    </button>
+    <style>
+      #panel {
+        display: none;
+        position: absolute;
+        background: #222;
+        color: white;
+        font-weight: bold;
+        padding: 5px;
+        border-radius: 4px;
+        font-size: 90%;
+        pointer-events: none;
+        z-index: 20;
+      }
 
-    <input type="text" x-model="content">
+      #arrow {
+        position: absolute;
+        background: #333;
+        width: 8px;
+        height: 8px;
+        transform: rotate(45deg);
+      }
 
-    <button x-tooltip.raw="Hello, world!">
-        Raw tooltip
-    </button>
-</body>
+      main {
+        padding-top: 300px;
+      }
 
+      button {
+        font-size: 1.5rem;
+      }
+
+      #component {
+        position: relative;
+      }
+    </style>
+  </head>
+
+  <body>
+    <main>
+      <div id="component" x-data>
+        <button @click="$float($refs.panel, {offset: 10, flip: true})">Click over me!</button>
+        <div x-ref="panel" id="panel">I'm floating</div>
+      </div>
+
+      <div id="component" x-data>
+        <button @click="$float($refs.panel)">Click over me!</button>
+        <div x-ref="panel" id="panel">I'm floating 2!</div>
+      </div>
+    </main>
+  </body>
 </html>
