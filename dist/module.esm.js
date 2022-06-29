@@ -1101,7 +1101,8 @@ function src_default(Alpine) {
       }
       if (dismissable) {
         window.addEventListener("click", (event) => {
-          if (!el.contains(event.target) && isFloating()) {
+          const parent = el.closest("[x-data]");
+          if (!parent.contains(event.target) && isFloating()) {
             toggleFloat();
           }
         });
