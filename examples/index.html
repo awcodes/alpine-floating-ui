@@ -7,14 +7,18 @@
     <script type="module">
       import FloatingUI from "/dist/module.esm.js";
 
-      document.addEventListener("alpine:initializing", () => {
+      document.addEventListener("alpine:init", () => {
         FloatingUI(window.Alpine);
       });
     </script>
-    <script src="https://cdn.jsdelivr.net/gh/alpinejs/alpine-next/packages/alpinejs/dist/cdn.min.js" defer></script>
+    <script src="//unpkg.com/alpinejs" defer></script>
 
     <style>
-      #panel {
+      .component {
+        position: relative;
+      }
+
+      .panel {
         display: none;
         position: absolute;
         background: #222;
@@ -26,7 +30,7 @@
         z-index: 20;
       }
 
-      #arrow {
+      .arrow {
         position: absolute;
         background: inherit;
         width: 8px;
@@ -41,16 +45,18 @@
       button {
         font-size: 1.5rem;
       }
-
-      #component {
-        position: relative;
-      }
     </style>
   </head>
 
   <body>
     <main>
-      <div id="component" x-data>
+
+      <div class="component" x-data="floater()">
+        <button x-bind="trigger">Click over me!</button>
+        <div x-bind="panel" class="panel">I'm floating</div>
+      </div>
+
+      <!-- <div id="component" x-data>
         <button @click="$float($refs.panel, {offset: 10})">Click over me!</button>
         <div x-ref="panel" id="panel">I'm floating</div>
       </div>
@@ -70,7 +76,7 @@
           I'm floating 2!
           <div x-ref="arrow" id="arrow"></div>
         </div>
-      </div>
+      </div> -->
     </main>
   </body>
 </html>
