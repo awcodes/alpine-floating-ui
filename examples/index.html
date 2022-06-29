@@ -28,7 +28,7 @@
 
       #arrow {
         position: absolute;
-        background: #333;
+        background: inherit;
         width: 8px;
         height: 8px;
         transform: rotate(45deg);
@@ -51,13 +51,25 @@
   <body>
     <main>
       <div id="component" x-data>
-        <button @click="$float($refs.panel, {offset: 10, flip: true})">Click over me!</button>
+        <button @click="$float($refs.panel, {offset: 10})">Click over me!</button>
         <div x-ref="panel" id="panel">I'm floating</div>
       </div>
 
       <div id="component" x-data>
-        <button @click="$float($refs.panel)">Click over me!</button>
-        <div x-ref="panel" id="panel">I'm floating 2!</div>
+        <button
+          @click="$float($refs.panel, {
+          offset: 10,
+          arrow: {
+            element: $refs.arrow
+          }
+        })"
+        >
+          Click over me!
+        </button>
+        <div x-ref="panel" id="panel">
+          I'm floating 2!
+          <div x-ref="arrow" id="arrow"></div>
+        </div>
       </div>
     </main>
   </body>

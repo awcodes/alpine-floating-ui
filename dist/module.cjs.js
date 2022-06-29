@@ -289,6 +289,54 @@ var max = Math.max;
 function within(min$1, value, max$1) {
   return max(min$1, min(value, max$1));
 }
+var arrow = (options) => ({
+  name: "arrow",
+  options,
+  async fn(middlewareArguments) {
+    const {
+      element,
+      padding = 0
+    } = options != null ? options : {};
+    const {
+      x,
+      y,
+      placement,
+      rects,
+      platform: platform2
+    } = middlewareArguments;
+    if (element == null) {
+      if (true) {
+        console.warn("Floating UI: No `element` was passed to the `arrow` middleware.");
+      }
+      return {};
+    }
+    const paddingObject = getSideObjectFromPadding(padding);
+    const coords = {
+      x,
+      y
+    };
+    const axis = getMainAxisFromPlacement(placement);
+    const length = getLengthFromAxis(axis);
+    const arrowDimensions = await platform2.getDimensions(element);
+    const minProp = axis === "y" ? "top" : "left";
+    const maxProp = axis === "y" ? "bottom" : "right";
+    const endDiff = rects.reference[length] + rects.reference[axis] - coords[axis] - rects.floating[length];
+    const startDiff = coords[axis] - rects.reference[axis];
+    const arrowOffsetParent = await (platform2.getOffsetParent == null ? void 0 : platform2.getOffsetParent(element));
+    const clientSize = arrowOffsetParent ? axis === "y" ? arrowOffsetParent.clientHeight || 0 : arrowOffsetParent.clientWidth || 0 : 0;
+    const centerToReference = endDiff / 2 - startDiff / 2;
+    const min3 = paddingObject[minProp];
+    const max3 = clientSize - arrowDimensions[length] - paddingObject[maxProp];
+    const center = clientSize / 2 - arrowDimensions[length] / 2 + centerToReference;
+    const offset2 = within(min3, center, max3);
+    return {
+      data: {
+        [axis]: offset2,
+        centerOffset: center - offset2
+      }
+    };
+  }
+});
 var hash$1 = {
   left: "right",
   right: "left",
@@ -321,6 +369,104 @@ var hash = {
 function getOppositeAlignmentPlacement(placement) {
   return placement.replace(/start|end/g, (matched) => hash[matched]);
 }
+var sides = ["top", "right", "bottom", "left"];
+var allPlacements = /* @__PURE__ */ sides.reduce((acc, side) => acc.concat(side, side + "-start", side + "-end"), []);
+function getPlacementList(alignment, autoAlignment, allowedPlacements) {
+  const allowedPlacementsSortedByAlignment = alignment ? [...allowedPlacements.filter((placement) => getAlignment(placement) === alignment), ...allowedPlacements.filter((placement) => getAlignment(placement) !== alignment)] : allowedPlacements.filter((placement) => getSide(placement) === placement);
+  return allowedPlacementsSortedByAlignment.filter((placement) => {
+    if (alignment) {
+      return getAlignment(placement) === alignment || (autoAlignment ? getOppositeAlignmentPlacement(placement) !== placement : false);
+    }
+    return true;
+  });
+}
+var autoPlacement = function(options) {
+  if (options === void 0) {
+    options = {};
+  }
+  return {
+    name: "autoPlacement",
+    options,
+    async fn(middlewareArguments) {
+      var _middlewareData$autoP, _middlewareData$autoP2, _middlewareData$autoP3, _middlewareData$autoP4, _placementsSortedByLe;
+      const {
+        x,
+        y,
+        rects,
+        middlewareData,
+        placement,
+        platform: platform2,
+        elements
+      } = middlewareArguments;
+      const _a = options, {
+        alignment = null,
+        allowedPlacements = allPlacements,
+        autoAlignment = true
+      } = _a, detectOverflowOptions = __objRest(_a, [
+        "alignment",
+        "allowedPlacements",
+        "autoAlignment"
+      ]);
+      const placements = getPlacementList(alignment, autoAlignment, allowedPlacements);
+      const overflow = await detectOverflow(middlewareArguments, detectOverflowOptions);
+      const currentIndex = (_middlewareData$autoP = (_middlewareData$autoP2 = middlewareData.autoPlacement) == null ? void 0 : _middlewareData$autoP2.index) != null ? _middlewareData$autoP : 0;
+      const currentPlacement = placements[currentIndex];
+      if (currentPlacement == null) {
+        return {};
+      }
+      const {
+        main,
+        cross
+      } = getAlignmentSides(currentPlacement, rects, await (platform2.isRTL == null ? void 0 : platform2.isRTL(elements.floating)));
+      if (placement !== currentPlacement) {
+        return {
+          x,
+          y,
+          reset: {
+            placement: placements[0]
+          }
+        };
+      }
+      const currentOverflows = [overflow[getSide(currentPlacement)], overflow[main], overflow[cross]];
+      const allOverflows = [...(_middlewareData$autoP3 = (_middlewareData$autoP4 = middlewareData.autoPlacement) == null ? void 0 : _middlewareData$autoP4.overflows) != null ? _middlewareData$autoP3 : [], {
+        placement: currentPlacement,
+        overflows: currentOverflows
+      }];
+      const nextPlacement = placements[currentIndex + 1];
+      if (nextPlacement) {
+        return {
+          data: {
+            index: currentIndex + 1,
+            overflows: allOverflows
+          },
+          reset: {
+            placement: nextPlacement
+          }
+        };
+      }
+      const placementsSortedByLeastOverflow = allOverflows.slice().sort((a, b) => a.overflows[0] - b.overflows[0]);
+      const placementThatFitsOnAllSides = (_placementsSortedByLe = placementsSortedByLeastOverflow.find((_ref) => {
+        let {
+          overflows
+        } = _ref;
+        return overflows.every((overflow2) => overflow2 <= 0);
+      })) == null ? void 0 : _placementsSortedByLe.placement;
+      const resetPlacement = placementThatFitsOnAllSides != null ? placementThatFitsOnAllSides : placementsSortedByLeastOverflow[0].placement;
+      if (resetPlacement !== placement) {
+        return {
+          data: {
+            index: currentIndex + 1,
+            overflows: allOverflows
+          },
+          reset: {
+            placement: resetPlacement
+          }
+        };
+      }
+      return {};
+    }
+  };
+};
 function getExpandedPlacements(placement) {
   const oppositePlacement = getOppositePlacement(placement);
   return [getOppositeAlignmentPlacement(placement), oppositePlacement, getOppositeAlignmentPlacement(oppositePlacement)];
@@ -414,6 +560,61 @@ var flip = function(options) {
         }
       }
       return {};
+    }
+  };
+};
+function getSideOffsets(overflow, rect) {
+  return {
+    top: overflow.top - rect.height,
+    right: overflow.right - rect.width,
+    bottom: overflow.bottom - rect.height,
+    left: overflow.left - rect.width
+  };
+}
+function isAnySideFullyClipped(overflow) {
+  return sides.some((side) => overflow[side] >= 0);
+}
+var hide = function(_temp) {
+  let _a = _temp === void 0 ? {} : _temp, {
+    strategy = "referenceHidden"
+  } = _a, detectOverflowOptions = __objRest(_a, [
+    "strategy"
+  ]);
+  return {
+    name: "hide",
+    async fn(middlewareArguments) {
+      const {
+        rects
+      } = middlewareArguments;
+      switch (strategy) {
+        case "referenceHidden": {
+          const overflow = await detectOverflow(middlewareArguments, __spreadProps(__spreadValues({}, detectOverflowOptions), {
+            elementContext: "reference"
+          }));
+          const offsets = getSideOffsets(overflow, rects.reference);
+          return {
+            data: {
+              referenceHiddenOffsets: offsets,
+              referenceHidden: isAnySideFullyClipped(offsets)
+            }
+          };
+        }
+        case "escaped": {
+          const overflow = await detectOverflow(middlewareArguments, __spreadProps(__spreadValues({}, detectOverflowOptions), {
+            altBoundary: true
+          }));
+          const offsets = getSideOffsets(overflow, rects.floating);
+          return {
+            data: {
+              escapedOffsets: offsets,
+              escaped: isAnySideFullyClipped(offsets)
+            }
+          };
+        }
+        default: {
+          return {};
+        }
+      }
     }
   };
 };
@@ -1104,20 +1305,29 @@ var buildConfigFromModifiers = (modifiers) => {
   const getModifierArgument = (modifier) => {
     return modifiers[modifier];
   };
-  if (keys.includes("placement")) {
-    config.placement = getModifierArgument("placement");
-  }
   if (keys.includes("offset")) {
     config.middleware.push(offset(getModifierArgument("offset")));
   }
+  if (keys.includes("placement")) {
+    config.placement = getModifierArgument("placement");
+  }
+  if (keys.includes("autoPlacement") && !keys.includes("flip")) {
+    config.middleware.push(autoPlacement(getModifierArgument("autoPlacement")));
+  }
   if (keys.includes("flip")) {
-    config.middleware.push(flip());
+    config.middleware.push(flip(getModifierArgument("flip")));
   }
   if (keys.includes("shift")) {
-    config.middleware.push(shift());
+    config.middleware.push(shift(getModifierArgument("shift")));
   }
   if (keys.includes("inline")) {
-    config.middleware.push(inline());
+    config.middleware.push(inline(getModifierArgument("inline")));
+  }
+  if (keys.includes("arrow")) {
+    config.middleware.push(arrow(getModifierArgument("arrow")));
+  }
+  if (keys.includes("hide")) {
+    config.middleware.push(hide(getModifierArgument("hide")));
   }
   return config;
 };
@@ -1126,41 +1336,68 @@ var buildConfigFromModifiers = (modifiers) => {
 function src_default(Alpine) {
   Alpine.magic("float", (el) => {
     return (floatEl, modifiers = {}, dismissable = true) => {
-      const config = Object.keys(modifiers).length > 0 ? buildConfigFromModifiers(modifiers) : { placement: "bottom", middleware: [flip()] };
+      const config = Object.keys(modifiers).length > 0 ? buildConfigFromModifiers(modifiers) : { middleware: [autoPlacement()] };
       function isFloating() {
         return floatEl.style.display == "block";
       }
-      function toggleFloat() {
-        if (isFloating()) {
-          floatEl.style.display = "";
-          autoUpdate(el, floatEl, update);
-        } else {
-          floatEl.style.display = "block";
-          update().then(({ x, y }) => {
-            Object.assign(floatEl.style, {
-              left: `${x}px`,
-              top: `${y}px`
-            });
-          });
-        }
+      function closePanel() {
+        floatEl.style.display = "";
+        autoUpdate(el, floatEl, update);
+      }
+      function openPanel() {
+        floatEl.style.display = "block";
+        update();
+      }
+      function togglePanel() {
+        isFloating() ? closePanel() : openPanel();
       }
       async function update() {
-        return await computePosition2(el, floatEl, config);
+        return await computePosition2(el, floatEl, config).then(({ middlewareData, placement, x, y }) => {
+          var _a, _b;
+          if (middlewareData.arrow) {
+            const ax = (_a = middlewareData.arrow) == null ? void 0 : _a.x;
+            const ay = (_b = middlewareData.arrow) == null ? void 0 : _b.y;
+            const aEl = config.middleware.filter((middleware) => middleware.name == "arrow")[0].options.element;
+            const staticSide = {
+              top: "bottom",
+              right: "left",
+              bottom: "top",
+              left: "right"
+            }[placement.split("-")[0]];
+            Object.assign(aEl.style, {
+              left: ax != null ? `${ax}px` : "",
+              top: ay != null ? `${ay}px` : "",
+              right: "",
+              bottom: "",
+              [staticSide]: "-4px"
+            });
+          }
+          if (middlewareData.hide) {
+            const { referenceHidden } = middlewareData.hide;
+            Object.assign(floatEl.style, {
+              visibility: referenceHidden ? "hidden" : "visible"
+            });
+          }
+          Object.assign(floatEl.style, {
+            left: `${x}px`,
+            top: `${y}px`
+          });
+        });
       }
       if (dismissable) {
         window.addEventListener("click", (event) => {
           const parent = el.closest("[x-data]");
           if (!parent.contains(event.target) && isFloating()) {
-            toggleFloat();
+            togglePanel();
           }
         });
         window.addEventListener("keydown", (event) => {
           if (event.key === "Escape" && isFloating()) {
-            toggleFloat();
+            togglePanel();
           }
         }, true);
       }
-      toggleFloat();
+      togglePanel();
     };
   });
 }

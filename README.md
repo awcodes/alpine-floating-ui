@@ -2,11 +2,11 @@
 
 Add Floating UI functionality to Alpine 3.x components.
 
-> This package only supports Alpine v3.x.
+> This package only supports Alpine ^3.x.
 
 ## About
 
-This plugin adds a `$float` magic to Alpine, with modifiers for Floating UI functionality.
+This plugin adds a `$float` magic to Alpine, with modifiers for [Floating UI](https://floating-ui.com/) functionality.
 
 ## Installation
 
@@ -15,7 +15,7 @@ This plugin adds a `$float` magic to Alpine, with modifiers for Floating UI func
 Include the following `<script>` tag in the `<head>` of your document, just before Alpine.
 
 ```html
-<script src="https://cdn.jsdelivr.net/npm/@awcodes/alpine-floating-ui@1.x.x/dist/cdn.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/@awcodes/alpine-floating-ui@2.x.x/dist/cdn.min.js" defer></script>
 ```
 
 ### NPM
@@ -52,23 +52,61 @@ To create a Floating UI component, use the `$float` magic on the trigger element
 </div>
 ```
 
-#### Floating UI configuration
+## Floating UI configuration
 
 The second argument to `$float` should be an object.
 
-This object currently only accepts 'position', 'flip', 'offset' and 'shift' for Floating UI. See the [Floating UI Tutorial](https://floating-ui.com/docs/tutorial) for infomation about these options.
+This object currently accepts the 'position', 'flip', 'offset', 'shift', 'arrow', and 'hide' middleware for Floating UI. See the [Floating UI Tutorial](https://floating-ui.com/docs/tutorial) for infomation about these options.
 
 Default options are:
 
 ```js
 {
     placement: 'bottom',
-    middleware: [flip()],
+    middleware: [autoPlacement()],
 }
 ```
 
+To use the default options for each middleware pass an empty object as the value.
+
 ```html
-<button @click="$float($refs.panel, {offset: 10, flip: true})"></button>
+<button @click="$float($refs.panel, {
+  offset: 10,
+  flip: {},
+  hide: {
+    strategy: 'referenceHidden'
+  }
+})"></button>
+```
+
+### Arrow Middleware
+
+To use the arrow middleware you must provide an element to use as the arrow and it should be placed inside your panel in the HTML.
+
+```html
+<div id="component" x-data>
+  <button @click="$float($refs.panel, {
+    offset: 10,
+    arrow: {
+      element: $refs.arrow
+    }
+  })">Click over me!</button>
+  <div x-ref="panel" id="panel">
+    I'm floating 2!
+    <div x-ref="arrow" id="arrow"></div>
+  </div>
+</div>
+```
+
+Styling the arrow (this is just an example, you are free to style it anyway you choose):
+```css
+#arrow {
+  position: absolute;
+  background-color: inherit;
+  width: 8px;
+  height: 8px;
+  transform: rotate(45deg);
+}
 ```
 
 ## Versioning
