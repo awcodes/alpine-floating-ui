@@ -58,8 +58,8 @@
 
   <body>
     <main>
-      <div class="component" x-data="{test: 'test'}">
-        <button @click="$float($refs.panel, {offset: 10})">Click over me!</button>
+      <div class="component" x-data>
+        <button @click="$float({offset: 10}, {trap: true})">Click over me!</button>
         <div x-ref="panel" class="panel">
           <ul>
             <li><button>Button 1</button></li>
@@ -70,7 +70,7 @@
 
       <div class="component" x-data>
         <button
-          @click="$float($refs.panel, {
+          x-on:click="$float({
           offset: 10,
           placement: 'top',
           arrow: {

@@ -1332,34 +1332,72 @@ var buildConfigFromModifiers = (modifiers) => {
   return config;
 };
 
+// src/randomString.js
+var randomString = (length) => {
+  var chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXTZabcdefghiklmnopqrstuvwxyz".split("");
+  var str = "";
+  if (!length) {
+    length = Math.floor(Math.random() * chars.length);
+  }
+  for (var i = 0; i < length; i++) {
+    str += chars[Math.floor(Math.random() * chars.length)];
+  }
+  return str;
+};
+
 // src/index.js
 function src_default(Alpine) {
+  const defaultOptions = {
+    dismissable: true,
+    trap: false
+  };
+  const atTriggers = document.querySelectorAll('[\\@click*="$float"]');
+  const xTriggers = document.querySelectorAll('[x-on\\:click*="$float"]');
+  const triggers = [...atTriggers, ...xTriggers].forEach(function(trig) {
+    const parentComponent = trig.parentElement.closest("[x-data]");
+    const panel = parentComponent.querySelector('[x-ref="panel"]');
+    if (!trig.hasAttribute("aria-expanded")) {
+      trig.setAttribute("aria-expanded", false);
+    }
+    if (!panel.hasAttribute("id")) {
+      const panelId = `panel-${randomString(8)}`;
+      trig.setAttribute("aria-controls", panelId);
+      panel.setAttribute("id", panelId);
+    } else {
+      trig.setAttribute("aria-controls", panel.getAttribute("id"));
+    }
+    panel.setAttribute("aria-modal", true);
+    panel.setAttribute("role", dialog);
+  });
   Alpine.magic("float", (el) => {
-    return (floatEl, modifiers = {}, options = {
-      dismissable: true
-    }) => {
+    return (modifiers = {}, settings = {}) => {
+      const options = __spreadValues(__spreadValues({}, defaultOptions), settings);
       const config = Object.keys(modifiers).length > 0 ? buildConfigFromModifiers(modifiers) : { middleware: [autoPlacement()] };
-      const parentComponent = el.closest("[x-data]");
+      const parentComponent = el.parentElement.closest("[x-data]");
       const trigger = el;
       const panel = parentComponent.querySelector('[x-ref="panel"]');
       function isFloating() {
-        return floatEl.style.display == "block";
+        return panel.style.display == "block";
       }
       function closePanel() {
-        floatEl.style.display = "";
-        floatEl.setAttribute("x-trap", false);
-        autoUpdate(el, floatEl, update);
+        panel.style.display = "";
+        trigger.setAttribute("aria-expanded", false);
+        if (options.trap)
+          panel.setAttribute("x-trap", false);
+        autoUpdate(el, panel, update);
       }
       function openPanel() {
-        floatEl.style.display = "block";
-        floatEl.setAttribute("x-trap", true);
+        panel.style.display = "block";
+        trigger.setAttribute("aria-expanded", true);
+        if (options.trap)
+          panel.setAttribute("x-trap", true);
         update();
       }
       function togglePanel() {
         isFloating() ? closePanel() : openPanel();
       }
       async function update() {
-        return await computePosition2(el, floatEl, config).then(({ middlewareData, placement, x, y }) => {
+        return await computePosition2(el, panel, config).then(({ middlewareData, placement, x, y }) => {
           var _a, _b;
           if (middlewareData.arrow) {
             const ax = (_a = middlewareData.arrow) == null ? void 0 : _a.x;
@@ -1381,11 +1419,11 @@ function src_default(Alpine) {
           }
           if (middlewareData.hide) {
             const { referenceHidden } = middlewareData.hide;
-            Object.assign(floatEl.style, {
+            Object.assign(panel.style, {
               visibility: referenceHidden ? "hidden" : "visible"
             });
           }
-          Object.assign(floatEl.style, {
+          Object.assign(panel.style, {
             left: `${x}px`,
             top: `${y}px`
           });
