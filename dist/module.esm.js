@@ -1285,7 +1285,9 @@ var buildConfigFromModifiers = (modifiers) => {
 // src/index.js
 function src_default(Alpine) {
   Alpine.magic("float", (el) => {
-    return (floatEl, modifiers = {}, dismissable = true) => {
+    return (floatEl, modifiers = {}, options = {
+      dismissable: true
+    }) => {
       const config = Object.keys(modifiers).length > 0 ? buildConfigFromModifiers(modifiers) : { middleware: [autoPlacement()] };
       function isFloating() {
         return floatEl.style.display == "block";
@@ -1333,7 +1335,7 @@ function src_default(Alpine) {
           });
         });
       }
-      if (dismissable) {
+      if (options.dismissable) {
         window.addEventListener("click", (event) => {
           const parent = el.closest("[x-data]");
           if (!parent.contains(event.target) && isFloating()) {
