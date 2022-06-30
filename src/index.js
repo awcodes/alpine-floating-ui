@@ -28,7 +28,7 @@ export default function (Alpine) {
     }
 
     panel.setAttribute("aria-modal", true);
-    panel.setAttribute("role", dialog);
+    panel.setAttribute("role", "dialog");
   });
 
   Alpine.magic("float", (el) => {

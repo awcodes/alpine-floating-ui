@@ -1367,7 +1367,7 @@ function src_default(Alpine) {
       trig.setAttribute("aria-controls", panel.getAttribute("id"));
     }
     panel.setAttribute("aria-modal", true);
-    panel.setAttribute("role", dialog);
+    panel.setAttribute("role", "dialog");
   });
   Alpine.magic("float", (el) => {
     return (modifiers = {}, settings = {}) => {
