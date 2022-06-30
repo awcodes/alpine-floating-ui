@@ -1,6 +1,6 @@
 {
   "name": "@awcodes/alpine-floating-ui",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "description": "Add Floating UI functionality to Alpine 3.x components.",
   "keywords": [
     "AlpineJS",
