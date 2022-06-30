@@ -11,10 +11,16 @@
         FloatingUI(window.Alpine);
       });
     </script>
-    <script src="https://cdn.jsdelivr.net/gh/alpinejs/alpine-next/packages/alpinejs/dist/cdn.min.js" defer></script>
+    <script defer src="https://unpkg.com/@alpinejs/focus@3.x.x/dist/cdn.min.js"></script>
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
     <style>
-      #panel {
+      .component {
+        position: relative;
+        display: inline-block;
+      }
+
+      .panel {
         display: none;
         position: absolute;
         background: #222;
@@ -26,7 +32,7 @@
         z-index: 20;
       }
 
-      #arrow {
+      .arrow {
         position: absolute;
         background: inherit;
         width: 8px;
@@ -42,23 +48,31 @@
         font-size: 1.5rem;
       }
 
-      #component {
-        position: relative;
+      ul {
+        list-style: none;
+        padding-inline-start: 0;
+        margin-inline-start: 0;
       }
     </style>
   </head>
 
   <body>
     <main>
-      <div id="component" x-data>
+      <div class="component" x-data="{test: 'test'}">
         <button @click="$float($refs.panel, {offset: 10})">Click over me!</button>
-        <div x-ref="panel" id="panel">I'm floating</div>
+        <div x-ref="panel" class="panel">
+          <ul>
+            <li><button>Button 1</button></li>
+            <li><button>Button 2</button></li>
+            <li><button>Button 3</button></li>
+        </div>
       </div>
 
-      <div id="component" x-data>
+      <div class="component" x-data>
         <button
           @click="$float($refs.panel, {
           offset: 10,
+          placement: 'top',
           arrow: {
             element: $refs.arrow
           }
@@ -66,9 +80,9 @@
         >
           Click over me!
         </button>
-        <div x-ref="panel" id="panel">
+        <div x-ref="panel" class="panel">
           I'm floating 2!
-          <div x-ref="arrow" id="arrow"></div>
+          <div x-ref="arrow" class="arrow"></div>
         </div>
       </div>
     </main>

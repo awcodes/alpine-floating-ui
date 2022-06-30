@@ -1290,15 +1290,20 @@
         dismissable: true
       }) => {
         const config = Object.keys(modifiers).length > 0 ? buildConfigFromModifiers(modifiers) : { middleware: [autoPlacement()] };
+        const parentComponent = el.closest("[x-data]");
+        const trigger = el;
+        const panel = parentComponent.querySelector('[x-ref="panel"]');
         function isFloating() {
           return floatEl.style.display == "block";
         }
         function closePanel() {
           floatEl.style.display = "";
+          floatEl.setAttribute("x-trap", false);
           autoUpdate(el, floatEl, update);
         }
         function openPanel() {
           floatEl.style.display = "block";
+          floatEl.setAttribute("x-trap", true);
           update();
         }
         function togglePanel() {
@@ -1338,8 +1343,7 @@
         }
         if (options.dismissable) {
           window.addEventListener("click", (event) => {
-            const parent = el.closest("[x-data]");
-            if (!parent.contains(event.target) && isFloating()) {
+            if (!parentComponent.contains(event.target) && isFloating()) {
               togglePanel();
             }
           });

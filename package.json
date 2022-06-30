@@ -19,6 +19,7 @@
   "module": "dist/module.esm.js",
   "type": "module",
   "devDependencies": {
+    "@alpinejs/focus": "^3.10.2",
     "@floating-ui/dom": "^0.4.2",
     "@types/jest": "^27.4.1",
     "alpinejs": "^3.10.2",
