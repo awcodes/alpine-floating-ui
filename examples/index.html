@@ -58,6 +58,37 @@
 
   <body>
     <main>
+
+      <p>x-float.options.go.here x-ref="panel" and then use $refs.panel.open() / toggle() / close()</p>
+
+      <div class="component" x-data="{test: false}">
+        <button @click="$refs.panel.toggle">Directive</button>
+        <div x-ref="panel" class="panel" x-float.flip.offset>
+          <ul>
+            <li><button>Button 1</button></li>
+            <li><button>Button 2</button></li>
+            <li><button>Button 3</button></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="component" x-data="{test: false}">
+        <button @click="$refs.panel.toggle">Directive with settings</button>
+        <div x-ref="panel" class="panel" x-float.flip.offset.trap.arrow="{
+          offset: 30,
+          arrow: {
+            element: $refs.arrow
+          }
+        }">
+          <ul>
+            <li><button>Button 1</button></li>
+            <li><button>Button 2</button></li>
+            <li><button>Button 3</button></li>
+          </ul>
+          <div x-ref="arrow" class="arrow"></div>
+        </div>
+      </div>
+
       <div class="component" x-data>
         <button @click="$float({offset: 10}, {trap: true})">Click over me!</button>
         <div x-ref="panel" class="panel">
@@ -65,6 +96,7 @@
             <li><button>Button 1</button></li>
             <li><button>Button 2</button></li>
             <li><button>Button 3</button></li>
+          </ul>
         </div>
       </div>
 

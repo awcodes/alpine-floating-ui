@@ -1,5 +1,6 @@
 import { computePosition, autoUpdate, autoPlacement } from "@floating-ui/dom";
 import { buildConfigFromModifiers } from "./buildConfigFromModifiers";
+import { buildDirectiveConfigFromModifiers } from "./buildDirectiveConfigFromModifiers";
 import { randomString } from "./randomString";
 
 export default function (Alpine) {
@@ -8,37 +9,36 @@ export default function (Alpine) {
     trap: false,
   };
 
-  const atTriggers = document.querySelectorAll('[\\@click*="$float"]');
-  const xTriggers = document.querySelectorAll('[x-on\\:click*="$float"]');
-
-  const triggers = [...atTriggers, ...xTriggers].forEach(function (trig) {
-    const parentComponent = trig.parentElement.closest("[x-data]");
-    const panel = parentComponent.querySelector('[x-ref="panel"]');
-
-    if (!trig.hasAttribute("aria-expanded")) {
-      trig.setAttribute("aria-expanded", false);
+  function setupA11y(component, trigger, panel = null) {
+    if (!trigger.hasAttribute("aria-expanded")) {
+      trigger.setAttribute("aria-expanded", false);
     }
 
     if (!panel.hasAttribute("id")) {
       const panelId = `panel-${randomString(8)}`;
-      trig.setAttribute("aria-controls", panelId);
+      trigger.setAttribute("aria-controls", panelId);
       panel.setAttribute("id", panelId);
     } else {
-      trig.setAttribute("aria-controls", panel.getAttribute("id"));
+      trigger.setAttribute("aria-controls", panelId);
     }
 
     panel.setAttribute("aria-modal", true);
     panel.setAttribute("role", "dialog");
-  });
+  }
 
   Alpine.magic("float", (el) => {
+    const component = el.parentElement.closest("[x-data]");
+    const panel = component.querySelector('[x-ref="panel"]');
+
+    setupA11y(component, el, panel);
+
     return (modifiers = {}, settings = {}) => {
       const options = { ...defaultOptions, ...settings };
       const config = Object.keys(modifiers).length > 0 ? buildConfigFromModifiers(modifiers) : { middleware: [autoPlacement()] };
 
-      const parentComponent = el.parentElement.closest("[x-data]");
       const trigger = el;
-      const panel = parentComponent.querySelector('[x-ref="panel"]');
+      const component = el.parentElement.closest("[x-data]");
+      const panel = component.querySelector('[x-ref="panel"]');
 
       function isFloating() {
         return panel.style.display == "block";
@@ -102,7 +102,7 @@ export default function (Alpine) {
 
       if (options.dismissable) {
         window.addEventListener("click", (event) => {
-          if (!parentComponent.contains(event.target) && isFloating()) {
+          if (!component.contains(event.target) && isFloating()) {
             togglePanel();
           }
         });
@@ -119,6 +119,99 @@ export default function (Alpine) {
       }
 
       togglePanel();
+    };
+  });
+
+  Alpine.directive("float", (panel, { modifiers, expression }, { evaluate }) => {
+    const settings = expression ? evaluate(expression) : {};
+    const config = modifiers.length > 0 ? buildDirectiveConfigFromModifiers(modifiers, settings) : {};
+
+    const clickAway = (event) => (!panel.parentElement.closest("[x-data]").contains(event.target) ? panel.close() : null);
+    const keyEscape = (event) => (event.key === "Escape" ? panel.close() : null);
+
+    async function update() {
+      return await computePosition(panel.trigger, panel, config.float).then(({ middlewareData, placement, x, y }) => {
+        if (middlewareData.arrow) {
+          const ax = middlewareData.arrow?.x;
+          const ay = middlewareData.arrow?.y;
+          const aEl = config.float.middleware.filter((middleware) => middleware.name == "arrow")[0].options.element;
+
+          const staticSide = {
+            top: "bottom",
+            right: "left",
+            bottom: "top",
+            left: "right",
+          }[placement.split("-")[0]];
+
+          Object.assign(aEl.style, {
+            left: ax != null ? `${ax}px` : "",
+            top: ay != null ? `${ay}px` : "",
+            right: "",
+            bottom: "",
+            [staticSide]: "-4px",
+          });
+        }
+
+        if (middlewareData.hide) {
+          const { referenceHidden } = middlewareData.hide;
+
+          Object.assign(panel.style, {
+            visibility: referenceHidden ? "hidden" : "visible",
+          });
+        }
+
+        Object.assign(panel.style, {
+          left: `${x}px`,
+          top: `${y}px`,
+        });
+      });
+    }
+
+    const refName = panel.getAttribute("x-ref");
+
+    const component = panel.parentElement.closest("[x-data]");
+    const atTrigger = component.querySelectorAll(`[\\@click^="$refs.${refName}"]`);
+    const xTrigger = component.querySelectorAll(`[x-on\\:click^="$refs.${refName}"]`);
+
+    setupA11y(component, [...atTrigger, ...xTrigger][0], panel);
+
+    panel.isOpen = false;
+    panel.trigger = null;
+
+    panel.open = async function (event) {
+      panel.trigger = event.currentTarget;
+
+      panel.isOpen = true;
+
+      panel.style.display = "block";
+
+      panel.trigger.setAttribute("aria-expanded", true);
+
+      if (config.component.trap) panel.setAttribute("x-trap", true);
+
+      await update();
+
+      window.addEventListener("click", clickAway);
+      window.addEventListener("keydown", keyEscape, true);
+    };
+
+    panel.close = function () {
+      panel.isOpen = false;
+
+      panel.style.display = "";
+
+      panel.trigger.setAttribute("aria-expanded", false);
+
+      if (config.component.trap) panel.setAttribute("x-trap", false);
+
+      autoUpdate(panel.trigger, panel, update);
+
+      window.removeEventListener("click", clickAway);
+      window.removeEventListener("keydown", keyEscape, false);
+    };
+
+    panel.toggle = function (event) {
+      panel.isOpen ? panel.close() : panel.open(event);
     };
   });
 }

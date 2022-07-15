@@ -1,36 +1,7 @@
 var __defProp = Object.defineProperty;
-var __defProps = Object.defineProperties;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
-var __getOwnPropDescs = Object.getOwnPropertyDescriptors;
 var __getOwnPropNames = Object.getOwnPropertyNames;
-var __getOwnPropSymbols = Object.getOwnPropertySymbols;
 var __hasOwnProp = Object.prototype.hasOwnProperty;
-var __propIsEnum = Object.prototype.propertyIsEnumerable;
-var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
-var __spreadValues = (a, b) => {
-  for (var prop in b || (b = {}))
-    if (__hasOwnProp.call(b, prop))
-      __defNormalProp(a, prop, b[prop]);
-  if (__getOwnPropSymbols)
-    for (var prop of __getOwnPropSymbols(b)) {
-      if (__propIsEnum.call(b, prop))
-        __defNormalProp(a, prop, b[prop]);
-    }
-  return a;
-};
-var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
-var __objRest = (source, exclude) => {
-  var target = {};
-  for (var prop in source)
-    if (__hasOwnProp.call(source, prop) && exclude.indexOf(prop) < 0)
-      target[prop] = source[prop];
-  if (source != null && __getOwnPropSymbols)
-    for (var prop of __getOwnPropSymbols(source)) {
-      if (exclude.indexOf(prop) < 0 && __propIsEnum.call(source, prop))
-        target[prop] = source[prop];
-    }
-  return target;
-};
 var __export = (target, all) => {
   for (var name in all)
     __defProp(target, name, { get: all[name], enumerable: true });
@@ -184,9 +155,13 @@ var computePosition = async (reference, floating, config) => {
     });
     x = nextX != null ? nextX : x;
     y = nextY != null ? nextY : y;
-    middlewareData = __spreadProps(__spreadValues({}, middlewareData), {
-      [name]: __spreadValues(__spreadValues({}, middlewareData[name]), data)
-    });
+    middlewareData = {
+      ...middlewareData,
+      [name]: {
+        ...middlewareData[name],
+        ...data
+      }
+    };
     if (reset) {
       if (typeof reset === "object") {
         if (reset.placement) {
@@ -217,12 +192,13 @@ var computePosition = async (reference, floating, config) => {
   };
 };
 function expandPaddingObject(padding) {
-  return __spreadValues({
+  return {
     top: 0,
     right: 0,
     bottom: 0,
-    left: 0
-  }, padding);
+    left: 0,
+    ...padding
+  };
 }
 function getSideObjectFromPadding(padding) {
   return typeof padding !== "number" ? expandPaddingObject(padding) : {
@@ -233,12 +209,13 @@ function getSideObjectFromPadding(padding) {
   };
 }
 function rectToClientRect(rect) {
-  return __spreadProps(__spreadValues({}, rect), {
+  return {
+    ...rect,
     top: rect.y,
     left: rect.x,
     right: rect.x + rect.width,
     bottom: rect.y + rect.height
-  });
+  };
 }
 async function detectOverflow(middlewareArguments, options) {
   var _await$platform$isEle;
@@ -270,10 +247,11 @@ async function detectOverflow(middlewareArguments, options) {
     strategy
   }));
   const elementClientRect = rectToClientRect(platform2.convertOffsetParentRelativeRectToViewportRelativeRect ? await platform2.convertOffsetParentRelativeRectToViewportRelativeRect({
-    rect: elementContext === "floating" ? __spreadProps(__spreadValues({}, rects.floating), {
+    rect: elementContext === "floating" ? {
+      ...rects.floating,
       x,
       y
-    }) : rects.reference,
+    } : rects.reference,
     offsetParent: await (platform2.getOffsetParent == null ? void 0 : platform2.getOffsetParent(elements.floating)),
     strategy
   }) : rects[elementContext]);
@@ -398,15 +376,12 @@ var autoPlacement = function(options) {
         platform: platform2,
         elements
       } = middlewareArguments;
-      const _a = options, {
+      const {
         alignment = null,
         allowedPlacements = allPlacements,
-        autoAlignment = true
-      } = _a, detectOverflowOptions = __objRest(_a, [
-        "alignment",
-        "allowedPlacements",
-        "autoAlignment"
-      ]);
+        autoAlignment = true,
+        ...detectOverflowOptions
+      } = options;
       const placements = getPlacementList(alignment, autoAlignment, allowedPlacements);
       const overflow = await detectOverflow(middlewareArguments, detectOverflowOptions);
       const currentIndex = (_middlewareData$autoP = (_middlewareData$autoP2 = middlewareData.autoPlacement) == null ? void 0 : _middlewareData$autoP2.index) != null ? _middlewareData$autoP : 0;
@@ -488,19 +463,14 @@ var flip = function(options) {
         platform: platform2,
         elements
       } = middlewareArguments;
-      const _a = options, {
+      const {
         mainAxis: checkMainAxis = true,
         crossAxis: checkCrossAxis = true,
         fallbackPlacements: specifiedFallbackPlacements,
         fallbackStrategy = "bestFit",
-        flipAlignment = true
-      } = _a, detectOverflowOptions = __objRest(_a, [
-        "mainAxis",
-        "crossAxis",
-        "fallbackPlacements",
-        "fallbackStrategy",
-        "flipAlignment"
-      ]);
+        flipAlignment = true,
+        ...detectOverflowOptions
+      } = options;
       const side = getSide(placement);
       const isBasePlacement = side === initialPlacement;
       const fallbackPlacements = specifiedFallbackPlacements || (isBasePlacement || !flipAlignment ? [getOppositePlacement(initialPlacement)] : getExpandedPlacements(initialPlacement));
@@ -540,8 +510,8 @@ var flip = function(options) {
         let resetPlacement = "bottom";
         switch (fallbackStrategy) {
           case "bestFit": {
-            var _overflowsData$slice$;
-            const placement2 = (_overflowsData$slice$ = overflowsData.slice().sort((a, b) => a.overflows.filter((overflow2) => overflow2 > 0).reduce((acc, overflow2) => acc + overflow2, 0) - b.overflows.filter((overflow2) => overflow2 > 0).reduce((acc, overflow2) => acc + overflow2, 0))[0]) == null ? void 0 : _overflowsData$slice$.placement;
+            var _overflowsData$map$so;
+            const placement2 = (_overflowsData$map$so = overflowsData.map((d) => [d, d.overflows.filter((overflow2) => overflow2 > 0).reduce((acc, overflow2) => acc + overflow2, 0)]).sort((a, b) => a[1] - b[1])[0]) == null ? void 0 : _overflowsData$map$so[0].placement;
             if (placement2) {
               resetPlacement = placement2;
             }
@@ -575,11 +545,10 @@ function isAnySideFullyClipped(overflow) {
   return sides.some((side) => overflow[side] >= 0);
 }
 var hide = function(_temp) {
-  let _a = _temp === void 0 ? {} : _temp, {
-    strategy = "referenceHidden"
-  } = _a, detectOverflowOptions = __objRest(_a, [
-    "strategy"
-  ]);
+  let {
+    strategy = "referenceHidden",
+    ...detectOverflowOptions
+  } = _temp === void 0 ? {} : _temp;
   return {
     name: "hide",
     async fn(middlewareArguments) {
@@ -588,9 +557,10 @@ var hide = function(_temp) {
       } = middlewareArguments;
       switch (strategy) {
         case "referenceHidden": {
-          const overflow = await detectOverflow(middlewareArguments, __spreadProps(__spreadValues({}, detectOverflowOptions), {
+          const overflow = await detectOverflow(middlewareArguments, {
+            ...detectOverflowOptions,
             elementContext: "reference"
-          }));
+          });
           const offsets = getSideOffsets(overflow, rects.reference);
           return {
             data: {
@@ -600,9 +570,10 @@ var hide = function(_temp) {
           };
         }
         case "escaped": {
-          const overflow = await detectOverflow(middlewareArguments, __spreadProps(__spreadValues({}, detectOverflowOptions), {
+          const overflow = await detectOverflow(middlewareArguments, {
+            ...detectOverflowOptions,
             altBoundary: true
-          }));
+          });
           const offsets = getSideOffsets(overflow, rects.floating);
           return {
             data: {
@@ -627,23 +598,24 @@ function convertValueToCoords(placement, rects, value, rtl) {
   const isVertical = getMainAxisFromPlacement(placement) === "x";
   const mainAxisMulti = ["left", "top"].includes(side) ? -1 : 1;
   const crossAxisMulti = rtl && isVertical ? -1 : 1;
-  const rawValue = typeof value === "function" ? value(__spreadProps(__spreadValues({}, rects), {
+  const rawValue = typeof value === "function" ? value({
+    ...rects,
     placement
-  })) : value;
-  const isNumber = typeof rawValue === "number";
+  }) : value;
   let {
     mainAxis,
     crossAxis,
     alignmentAxis
-  } = isNumber ? {
+  } = typeof rawValue === "number" ? {
     mainAxis: rawValue,
     crossAxis: 0,
     alignmentAxis: null
-  } : __spreadValues({
+  } : {
     mainAxis: 0,
     crossAxis: 0,
-    alignmentAxis: null
-  }, rawValue);
+    alignmentAxis: null,
+    ...rawValue
+  };
   if (alignment && typeof alignmentAxis === "number") {
     crossAxis = alignment === "end" ? alignmentAxis * -1 : alignmentAxis;
   }
@@ -696,7 +668,7 @@ var shift = function(options) {
         y,
         placement
       } = middlewareArguments;
-      const _a = options, {
+      const {
         mainAxis: checkMainAxis = true,
         crossAxis: checkCrossAxis = false,
         limiter = {
@@ -710,12 +682,9 @@ var shift = function(options) {
               y: y2
             };
           }
-        }
-      } = _a, detectOverflowOptions = __objRest(_a, [
-        "mainAxis",
-        "crossAxis",
-        "limiter"
-      ]);
+        },
+        ...detectOverflowOptions
+      } = options;
       const coords = {
         x,
         y
@@ -739,16 +708,18 @@ var shift = function(options) {
         const max3 = crossAxisCoord - overflow[maxSide];
         crossAxisCoord = within(min3, crossAxisCoord, max3);
       }
-      const limitedCoords = limiter.fn(__spreadProps(__spreadValues({}, middlewareArguments), {
+      const limitedCoords = limiter.fn({
+        ...middlewareArguments,
         [mainAxis]: mainAxisCoord,
         [crossAxis]: crossAxisCoord
-      }));
-      return __spreadProps(__spreadValues({}, limitedCoords), {
+      });
+      return {
+        ...limitedCoords,
         data: {
           x: limitedCoords.x - x,
           y: limitedCoords.y - y
         }
-      });
+      };
     }
   };
 };
@@ -879,6 +850,9 @@ function isNode(value) {
   return value instanceof getWindow(value).Node;
 }
 function isShadowRoot(node) {
+  if (typeof ShadowRoot === "undefined") {
+    return false;
+  }
   const OwnElement = getWindow(node).ShadowRoot;
   return node instanceof OwnElement || node instanceof ShadowRoot;
 }
@@ -905,6 +879,7 @@ var min2 = Math.min;
 var max2 = Math.max;
 var round = Math.round;
 function getBoundingClientRect(element, includeScale, isFixedStrategy) {
+  var _win$visualViewport$o, _win$visualViewport, _win$visualViewport$o2, _win$visualViewport2;
   if (includeScale === void 0) {
     includeScale = false;
   }
@@ -920,8 +895,8 @@ function getBoundingClientRect(element, includeScale, isFixedStrategy) {
   }
   const win = isElement(element) ? getWindow(element) : window;
   const addVisualOffsets = !isLayoutViewport() && isFixedStrategy;
-  const x = (clientRect.left + (addVisualOffsets ? win.visualViewport.offsetLeft : 0)) / scaleX;
-  const y = (clientRect.top + (addVisualOffsets ? win.visualViewport.offsetTop : 0)) / scaleY;
+  const x = (clientRect.left + (addVisualOffsets ? (_win$visualViewport$o = (_win$visualViewport = win.visualViewport) == null ? void 0 : _win$visualViewport.offsetLeft) != null ? _win$visualViewport$o : 0 : 0)) / scaleX;
+  const y = (clientRect.top + (addVisualOffsets ? (_win$visualViewport$o2 = (_win$visualViewport2 = win.visualViewport) == null ? void 0 : _win$visualViewport2.offsetTop) != null ? _win$visualViewport$o2 : 0 : 0)) / scaleY;
   const width = clientRect.width / scaleX;
   const height = clientRect.height / scaleY;
   return {
@@ -1067,10 +1042,11 @@ function convertOffsetParentRelativeRectToViewportRelativeRect(_ref) {
       offsets.y = offsetRect.y + offsetParent.clientTop;
     }
   }
-  return __spreadProps(__spreadValues({}, rect), {
+  return {
+    ...rect,
     x: rect.x - scroll.scrollLeft + offsets.x,
     y: rect.y - scroll.scrollTop + offsets.y
-  });
+  };
 }
 function getViewportRect(element, strategy) {
   const win = getWindow(element);
@@ -1135,11 +1111,11 @@ function getOverflowAncestors(node, list) {
   const win = getWindow(scrollableAncestor);
   const target = isBody ? [win].concat(win.visualViewport || [], isOverflowElement(scrollableAncestor) ? scrollableAncestor : []) : scrollableAncestor;
   const updatedList = list.concat(target);
-  return isBody ? updatedList : updatedList.concat(getOverflowAncestors(getParentNode(target)));
+  return isBody ? updatedList : updatedList.concat(getOverflowAncestors(target));
 }
 function contains(parent, child) {
-  const rootNode = child.getRootNode == null ? void 0 : child.getRootNode();
-  if (parent.contains(child)) {
+  const rootNode = child == null ? void 0 : child.getRootNode == null ? void 0 : child.getRootNode();
+  if (parent != null && parent.contains(child)) {
     return true;
   } else if (rootNode && isShadowRoot(rootNode)) {
     let next = child;
@@ -1225,10 +1201,11 @@ var platform = {
     } = _ref;
     return {
       reference: getRectRelativeToOffsetParent(reference, getOffsetParent(floating), strategy),
-      floating: __spreadProps(__spreadValues({}, getDimensions(floating)), {
+      floating: {
+        ...getDimensions(floating),
         x: 0,
         y: 0
-      })
+      }
     };
   },
   getClientRects: (element) => Array.from(element.getClientRects()),
@@ -1291,9 +1268,10 @@ function autoUpdate(reference, floating, update, options) {
     }
   };
 }
-var computePosition2 = (reference, floating, options) => computePosition(reference, floating, __spreadValues({
-  platform
-}, options));
+var computePosition2 = (reference, floating, options) => computePosition(reference, floating, {
+  platform,
+  ...options
+});
 
 // src/buildConfigFromModifiers.js
 var buildConfigFromModifiers = (modifiers) => {
@@ -1332,6 +1310,50 @@ var buildConfigFromModifiers = (modifiers) => {
   return config;
 };
 
+// src/buildDirectiveConfigFromModifiers.js
+var buildDirectiveConfigFromModifiers = (modifiers, settings) => {
+  const config = {
+    component: {
+      trap: false
+    },
+    float: {
+      placement: "bottom",
+      middleware: []
+    }
+  };
+  const getModifierArgument = (modifier) => {
+    return modifiers[modifiers.indexOf(modifier) + 1];
+  };
+  if (modifiers.includes("trap")) {
+    config.component.trap = true;
+  }
+  if (modifiers.includes("offset")) {
+    config.float.middleware.push(offset(settings["offset"] || 10));
+  }
+  if (modifiers.includes("placement")) {
+    config.float.placement = getModifierArgument("placement");
+  }
+  if (modifiers.includes("autoPlacement") && !modifiers.includes("flip")) {
+    config.float.middleware.push(autoPlacement(settings["autoPlacement"]));
+  }
+  if (modifiers.includes("flip")) {
+    config.float.middleware.push(flip(settings["flip"]));
+  }
+  if (modifiers.includes("shift")) {
+    config.float.middleware.push(shift(settings["shift"]));
+  }
+  if (modifiers.includes("inline")) {
+    config.float.middleware.push(inline(settings["inline"]));
+  }
+  if (modifiers.includes("arrow")) {
+    config.float.middleware.push(arrow(settings["arrow"]));
+  }
+  if (modifiers.includes("hide")) {
+    config.float.middleware.push(hide(settings["hide"]));
+  }
+  return config;
+};
+
 // src/randomString.js
 var randomString = (length) => {
   var chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXTZabcdefghiklmnopqrstuvwxyz".split("");
@@ -1351,53 +1373,52 @@ function src_default(Alpine) {
     dismissable: true,
     trap: false
   };
-  const atTriggers = document.querySelectorAll('[\\@click*="$float"]');
-  const xTriggers = document.querySelectorAll('[x-on\\:click*="$float"]');
-  const triggers = [...atTriggers, ...xTriggers].forEach(function(trig) {
-    const parentComponent = trig.parentElement.closest("[x-data]");
-    const panel = parentComponent.querySelector('[x-ref="panel"]');
-    if (!trig.hasAttribute("aria-expanded")) {
-      trig.setAttribute("aria-expanded", false);
+  function setupA11y(component, trigger, panel = null) {
+    if (!trigger.hasAttribute("aria-expanded")) {
+      trigger.setAttribute("aria-expanded", false);
     }
     if (!panel.hasAttribute("id")) {
-      const panelId = `panel-${randomString(8)}`;
-      trig.setAttribute("aria-controls", panelId);
-      panel.setAttribute("id", panelId);
+      const panelId2 = `panel-${randomString(8)}`;
+      trigger.setAttribute("aria-controls", panelId2);
+      panel.setAttribute("id", panelId2);
     } else {
-      trig.setAttribute("aria-controls", panel.getAttribute("id"));
+      trigger.setAttribute("aria-controls", panelId);
     }
     panel.setAttribute("aria-modal", true);
     panel.setAttribute("role", "dialog");
-  });
+  }
   Alpine.magic("float", (el) => {
+    const component = el.parentElement.closest("[x-data]");
+    const panel = component.querySelector('[x-ref="panel"]');
+    setupA11y(component, el, panel);
     return (modifiers = {}, settings = {}) => {
-      const options = __spreadValues(__spreadValues({}, defaultOptions), settings);
+      const options = { ...defaultOptions, ...settings };
       const config = Object.keys(modifiers).length > 0 ? buildConfigFromModifiers(modifiers) : { middleware: [autoPlacement()] };
-      const parentComponent = el.parentElement.closest("[x-data]");
       const trigger = el;
-      const panel = parentComponent.querySelector('[x-ref="panel"]');
+      const component2 = el.parentElement.closest("[x-data]");
+      const panel2 = component2.querySelector('[x-ref="panel"]');
       function isFloating() {
-        return panel.style.display == "block";
+        return panel2.style.display == "block";
       }
       function closePanel() {
-        panel.style.display = "";
+        panel2.style.display = "";
         trigger.setAttribute("aria-expanded", false);
         if (options.trap)
-          panel.setAttribute("x-trap", false);
-        autoUpdate(el, panel, update);
+          panel2.setAttribute("x-trap", false);
+        autoUpdate(el, panel2, update);
       }
       function openPanel() {
-        panel.style.display = "block";
+        panel2.style.display = "block";
         trigger.setAttribute("aria-expanded", true);
         if (options.trap)
-          panel.setAttribute("x-trap", true);
+          panel2.setAttribute("x-trap", true);
         update();
       }
       function togglePanel() {
         isFloating() ? closePanel() : openPanel();
       }
       async function update() {
-        return await computePosition2(el, panel, config).then(({ middlewareData, placement, x, y }) => {
+        return await computePosition2(el, panel2, config).then(({ middlewareData, placement, x, y }) => {
           var _a, _b;
           if (middlewareData.arrow) {
             const ax = (_a = middlewareData.arrow) == null ? void 0 : _a.x;
@@ -1419,11 +1440,11 @@ function src_default(Alpine) {
           }
           if (middlewareData.hide) {
             const { referenceHidden } = middlewareData.hide;
-            Object.assign(panel.style, {
+            Object.assign(panel2.style, {
               visibility: referenceHidden ? "hidden" : "visible"
             });
           }
-          Object.assign(panel.style, {
+          Object.assign(panel2.style, {
             left: `${x}px`,
             top: `${y}px`
           });
@@ -1431,7 +1452,7 @@ function src_default(Alpine) {
       }
       if (options.dismissable) {
         window.addEventListener("click", (event) => {
-          if (!parentComponent.contains(event.target) && isFloating()) {
+          if (!component2.contains(event.target) && isFloating()) {
             togglePanel();
           }
         });
@@ -1442,6 +1463,76 @@ function src_default(Alpine) {
         }, true);
       }
       togglePanel();
+    };
+  });
+  Alpine.directive("float", (panel, { modifiers, expression }, { evaluate }) => {
+    const settings = expression ? evaluate(expression) : {};
+    const config = modifiers.length > 0 ? buildDirectiveConfigFromModifiers(modifiers, settings) : {};
+    const clickAway = (event) => !panel.parentElement.closest("[x-data]").contains(event.target) ? panel.close() : null;
+    const keyEscape = (event) => event.key === "Escape" ? panel.close() : null;
+    async function update() {
+      return await computePosition2(panel.trigger, panel, config.float).then(({ middlewareData, placement, x, y }) => {
+        var _a, _b;
+        if (middlewareData.arrow) {
+          const ax = (_a = middlewareData.arrow) == null ? void 0 : _a.x;
+          const ay = (_b = middlewareData.arrow) == null ? void 0 : _b.y;
+          const aEl = config.float.middleware.filter((middleware) => middleware.name == "arrow")[0].options.element;
+          const staticSide = {
+            top: "bottom",
+            right: "left",
+            bottom: "top",
+            left: "right"
+          }[placement.split("-")[0]];
+          Object.assign(aEl.style, {
+            left: ax != null ? `${ax}px` : "",
+            top: ay != null ? `${ay}px` : "",
+            right: "",
+            bottom: "",
+            [staticSide]: "-4px"
+          });
+        }
+        if (middlewareData.hide) {
+          const { referenceHidden } = middlewareData.hide;
+          Object.assign(panel.style, {
+            visibility: referenceHidden ? "hidden" : "visible"
+          });
+        }
+        Object.assign(panel.style, {
+          left: `${x}px`,
+          top: `${y}px`
+        });
+      });
+    }
+    const refName = panel.getAttribute("x-ref");
+    const component = panel.parentElement.closest("[x-data]");
+    const atTrigger = component.querySelectorAll(`[\\@click^="$refs.${refName}"]`);
+    const xTrigger = component.querySelectorAll(`[x-on\\:click^="$refs.${refName}"]`);
+    setupA11y(component, [...atTrigger, ...xTrigger][0], panel);
+    panel.isOpen = false;
+    panel.trigger = null;
+    panel.open = async function(event) {
+      panel.trigger = event.currentTarget;
+      panel.isOpen = true;
+      panel.style.display = "block";
+      panel.trigger.setAttribute("aria-expanded", true);
+      if (config.component.trap)
+        panel.setAttribute("x-trap", true);
+      await update();
+      window.addEventListener("click", clickAway);
+      window.addEventListener("keydown", keyEscape, true);
+    };
+    panel.close = function() {
+      panel.isOpen = false;
+      panel.style.display = "";
+      panel.trigger.setAttribute("aria-expanded", false);
+      if (config.component.trap)
+        panel.setAttribute("x-trap", false);
+      autoUpdate(panel.trigger, panel, update);
+      window.removeEventListener("click", clickAway);
+      window.removeEventListener("keydown", keyEscape, false);
+    };
+    panel.toggle = function(event) {
+      panel.isOpen ? panel.close() : panel.open(event);
     };
   });
 }
