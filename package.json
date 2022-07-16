@@ -21,14 +21,11 @@
   "devDependencies": {
     "@alpinejs/focus": "^3.10.2",
     "@floating-ui/dom": "^0.4.2",
-    "@types/jest": "^27.4.1",
     "alpinejs": "^3.10.2",
     "brotli-size": "^4.0.0",
-    "esbuild": "^0.14.29",
-    "jest": "^27.5.1"
+    "esbuild": "^0.14.29"
   },
   "scripts": {
-    "test": "npm run build && node --experimental-vm-modules node_modules/.bin/jest",
     "build": "node ./scripts/build.js",
     "watch": "node ./scripts/build.js --watch"
   }

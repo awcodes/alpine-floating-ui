@@ -6,7 +6,7 @@ Add Floating UI functionality to Alpine 3.x components.
 
 ## About
 
-This plugin adds a `$float` magic to Alpine, with modifiers for [Floating UI](https://floating-ui.com/) functionality.
+This plugin adds a `$float` magic and an `x-float` directive to Alpine, with modifiers for [Floating UI](https://floating-ui.com/) functionality.
 
 ## Installation
 
@@ -27,15 +27,15 @@ Include the following `<script>` tag in the `<head>` of your document, just befo
 npm install @awcodes/alpine-floating-ui
 ```
 
-Add the `$float` magic property to your project by registering the plugin with Alpine. This plugin has the option to use x-trap, but you must also include the Alpine Focus plugin as well to make use of it.
+This plugin has the option to use x-trap, but you must also include the Alpine Focus plugin as well to make use of it.
 
 ```js
 import Alpine from "alpinejs";
 import Focus from "@alpinejs/focus"; // optional unless you want to use x-trap
-import FloatingUI from "@awcodes/alpine-floating-ui";
+import AlpineFloatingUI from "@awcodes/alpine-floating-ui";
 
 Alpine.plugin(Focus); // optional unless you want to use x-trap
-Alpine.plugin(FloatingUI);
+Alpine.plugin(AlpineFloatingUI);
 
 window.Alpine = Alpine;
 window.Alpine.start();
@@ -47,12 +47,30 @@ See the [Floating UI Tutorial](https://floating-ui.com/docs/tutorial) for infoma
 
 ## Usage
 
+### `$float` Magic
 To create a Floating UI component, use the `$float` magic on the trigger element and apply an `x-ref` to your 'panel'. Don't forget to have `x-data` on the root element of your component.
 
 ```html
 <div class="component" x-data>
   <button @click="$float()">I have a floating panel. Woot!</button>
   <div x-ref="panel" class="panel">I'm floating</div>
+</div>
+```
+
+### `x-float` Directive
+
+To create a floating UI component with x-float, add the directive to your floating element with an x-ref to name the name. You can then trigger the panel with a click event using `$refs` to target the panel.
+
+Available methods on the trigger are `toggle`, `open`, and `close`.
+
+To use the middleware with `x-float` simply chain on the middleware you need to use.
+
+```html
+<div class="component" x-data>
+  <button @click="$refs.panel.toggle">Trigger</button>
+  <div x-ref="panel" class="panel" x-float.placement.bottom-start.flip.offset>
+    <p>I'm floating</p>
+  </div>
 </div>
 ```
 
@@ -71,6 +89,8 @@ Default options are:
 }
 ```
 
+### With `$float` Magic
+
 To use the default options for each middleware pass an empty object as the value.
 
 ```html
@@ -83,9 +103,28 @@ To use the default options for each middleware pass an empty object as the value
 })"></button>
 ```
 
-### Arrow Middleware
+### With `x-float` Directive
+
+All settings should be configured within the expression of the x-float directive with the exception of `placement` which should be used directly on the directive itself. See [https://floating-ui.com/docs/computePosition#placement](https://floating-ui.com/docs/computePosition#placement) placement options.
+
+```html
+<div
+  x-ref="panel"
+  class="panel"
+  x-float.placement.top.flip.offset.hide="{
+    offset: 30,
+    hide: {
+      strategy: 'referenceHidden'
+    }
+  }"
+>
+```
+
+## Arrow Middleware
 
 To use the arrow middleware you must provide an element to use as the arrow, placed inside your panel in the HTML and passed into the arrow middleware as a $ref to the element.
+
+### With `$float` Magic
 
 ```html
 <div class="component" x-data>
@@ -102,7 +141,29 @@ To use the arrow middleware you must provide an element to use as the arrow, pla
 </div>
 ```
 
+### With `x-float` Directive
+
+```html
+<div class="component" x-data>
+  <button @click="$refs.panel.toggle">I'm a fancy button with a fancy arrow panel</button>
+  <div
+    x-ref="panel"
+    class="panel"
+    x-float.flip.offset.trap.arrow="{
+    offset: 30,
+    arrow: {
+      element: $refs.arrow
+    }
+  }"
+  >
+    <p>I'm floating 2!</p>
+    <div x-ref="arrow" class="arrow"></div>
+  </div>
+</div>
+```
+
 Styling the arrow (this is just an example, you are free to style it anyway you choose):
+
 ```css
 .arrow {
   position: absolute;
@@ -113,22 +174,30 @@ Styling the arrow (this is just an example, you are free to style it anyway you 
 }
 ```
 
-### X-Trap and Dissmissable
+## X-Trap
 
 The second argument that can be passed to `$float` is an object of plugin options for each float-ui element.
+
+### With `$float` Magic
 
 ```html
 <button @click="$float({
   offset: 10,
   placement: 'bottom-start',
 },{
-  dismissable: true,
-  trap: false
+  trap: true
 })"></button>
 ```
 
-* Setting `dismissable` to `false` will disable hiding the panel when clicking away or hitting the escape key.
-* Setting `trap` to `true` will enable Alpine's x-trap functionality to keep tab focus inside the panel until it is hidden.
+### With `x-float` Directive
+
+```html
+<div
+  x-ref="panel"
+  class="panel"
+  x-float.trap
+>
+```
 
 ## Versioning
 

@@ -26,12 +26,19 @@ export default function (Alpine) {
     panel.setAttribute("role", "dialog");
   }
 
-  Alpine.magic("float", (el) => {
-    const component = el.parentElement.closest("[x-data]");
+  /**
+   * set up a11y for magic instances
+   */
+  const atMagicTrigger = document.querySelectorAll('[\\@click^="$float"]');
+  const xMagicTrigger = document.querySelectorAll('[x-on\\:click^="$float"]');
+
+  [...atMagicTrigger, ...xMagicTrigger].forEach((trigger) => {
+    const component = trigger.parentElement.closest("[x-data]");
     const panel = component.querySelector('[x-ref="panel"]');
+    setupA11y(component, trigger, panel);
+  });
 
-    setupA11y(component, el, panel);
-
+  Alpine.magic("float", (el) => {
     return (modifiers = {}, settings = {}) => {
       const options = { ...defaultOptions, ...settings };
       const config = Object.keys(modifiers).length > 0 ? buildConfigFromModifiers(modifiers) : { middleware: [autoPlacement()] };

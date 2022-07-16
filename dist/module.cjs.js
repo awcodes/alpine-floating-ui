@@ -1387,38 +1387,42 @@ function src_default(Alpine) {
     panel.setAttribute("aria-modal", true);
     panel.setAttribute("role", "dialog");
   }
-  Alpine.magic("float", (el) => {
-    const component = el.parentElement.closest("[x-data]");
+  const atMagicTrigger = document.querySelectorAll('[\\@click^="$float"]');
+  const xMagicTrigger = document.querySelectorAll('[x-on\\:click^="$float"]');
+  [...atMagicTrigger, ...xMagicTrigger].forEach((trigger) => {
+    const component = trigger.parentElement.closest("[x-data]");
     const panel = component.querySelector('[x-ref="panel"]');
-    setupA11y(component, el, panel);
+    setupA11y(component, trigger, panel);
+  });
+  Alpine.magic("float", (el) => {
     return (modifiers = {}, settings = {}) => {
       const options = { ...defaultOptions, ...settings };
       const config = Object.keys(modifiers).length > 0 ? buildConfigFromModifiers(modifiers) : { middleware: [autoPlacement()] };
       const trigger = el;
-      const component2 = el.parentElement.closest("[x-data]");
-      const panel2 = component2.querySelector('[x-ref="panel"]');
+      const component = el.parentElement.closest("[x-data]");
+      const panel = component.querySelector('[x-ref="panel"]');
       function isFloating() {
-        return panel2.style.display == "block";
+        return panel.style.display == "block";
       }
       function closePanel() {
-        panel2.style.display = "";
+        panel.style.display = "";
         trigger.setAttribute("aria-expanded", false);
         if (options.trap)
-          panel2.setAttribute("x-trap", false);
-        autoUpdate(el, panel2, update);
+          panel.setAttribute("x-trap", false);
+        autoUpdate(el, panel, update);
       }
       function openPanel() {
-        panel2.style.display = "block";
+        panel.style.display = "block";
         trigger.setAttribute("aria-expanded", true);
         if (options.trap)
-          panel2.setAttribute("x-trap", true);
+          panel.setAttribute("x-trap", true);
         update();
       }
       function togglePanel() {
         isFloating() ? closePanel() : openPanel();
       }
       async function update() {
-        return await computePosition2(el, panel2, config).then(({ middlewareData, placement, x, y }) => {
+        return await computePosition2(el, panel, config).then(({ middlewareData, placement, x, y }) => {
           var _a, _b;
           if (middlewareData.arrow) {
             const ax = (_a = middlewareData.arrow) == null ? void 0 : _a.x;
@@ -1440,11 +1444,11 @@ function src_default(Alpine) {
           }
           if (middlewareData.hide) {
             const { referenceHidden } = middlewareData.hide;
-            Object.assign(panel2.style, {
+            Object.assign(panel.style, {
               visibility: referenceHidden ? "hidden" : "visible"
             });
           }
-          Object.assign(panel2.style, {
+          Object.assign(panel.style, {
             left: `${x}px`,
             top: `${y}px`
           });
@@ -1452,7 +1456,7 @@ function src_default(Alpine) {
       }
       if (options.dismissable) {
         window.addEventListener("click", (event) => {
-          if (!component2.contains(event.target) && isFloating()) {
+          if (!component.contains(event.target) && isFloating()) {
             togglePanel();
           }
         });
