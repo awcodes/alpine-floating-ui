@@ -135,7 +135,7 @@ export default function (Alpine) {
     const settings = expression ? evaluate(expression) : {};
     const config = modifiers.length > 0 ? buildDirectiveConfigFromModifiers(modifiers, settings) : {};
 
-    const clickAway = (event) => (!panel.parentElement.closest("[x-data]").contains(event.target) ? panel.close() : null);
+    const clickAway = (event) => (panel.parentElement && !panel.parentElement.closest("[x-data]").contains(event.target) ? panel.close() : null);
     const keyEscape = (event) => (event.key === "Escape" ? panel.close() : null);
 
     async function update() {
