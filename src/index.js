@@ -10,6 +10,8 @@ export default function (Alpine) {
   };
 
   function setupA11y(component, trigger, panel = null) {
+    if (!trigger) return;
+
     if (!trigger.hasAttribute("aria-expanded")) {
       trigger.setAttribute("aria-expanded", false);
     }

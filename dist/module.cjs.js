@@ -1374,6 +1374,8 @@ function src_default(Alpine) {
     trap: false
   };
   function setupA11y(component, trigger, panel = null) {
+    if (!trigger)
+      return;
     if (!trigger.hasAttribute("aria-expanded")) {
       trigger.setAttribute("aria-expanded", false);
     }
