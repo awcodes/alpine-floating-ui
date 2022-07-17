@@ -21,7 +21,7 @@ export default function (Alpine) {
       trigger.setAttribute("aria-controls", panelId);
       panel.setAttribute("id", panelId);
     } else {
-      trigger.setAttribute("aria-controls", panelId);
+      trigger.setAttribute("aria-controls", panel.getAttribute("id"));
     }
 
     panel.setAttribute("aria-modal", true);

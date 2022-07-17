@@ -1355,11 +1355,11 @@ function src_default(Alpine) {
       trigger.setAttribute("aria-expanded", false);
     }
     if (!panel.hasAttribute("id")) {
-      const panelId2 = `panel-${randomString(8)}`;
-      trigger.setAttribute("aria-controls", panelId2);
-      panel.setAttribute("id", panelId2);
-    } else {
+      const panelId = `panel-${randomString(8)}`;
       trigger.setAttribute("aria-controls", panelId);
+      panel.setAttribute("id", panelId);
+    } else {
+      trigger.setAttribute("aria-controls", panel.getAttribute("id"));
     }
     panel.setAttribute("aria-modal", true);
     panel.setAttribute("role", "dialog");
