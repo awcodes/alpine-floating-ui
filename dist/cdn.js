@@ -1489,7 +1489,7 @@
       panel.isOpen = false;
       panel.trigger = null;
       panel.open = async function(event) {
-        panel.trigger = event.currentTarget;
+        panel.trigger = event.currentTarget ? event.currentTarget : event;
         panel.isOpen = true;
         panel.style.display = "block";
         panel.trigger.setAttribute("aria-expanded", true);

@@ -186,7 +186,7 @@ export default function (Alpine) {
     panel.trigger = null;
 
     panel.open = async function (event) {
-      panel.trigger = event.currentTarget;
+      panel.trigger = event.currentTarget ? event.currentTarget : event;
 
       panel.isOpen = true;
 
