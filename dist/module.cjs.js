@@ -1478,44 +1478,12 @@ function src_default(Alpine) {
   Alpine.directive("float", (panel, { modifiers, expression }, { evaluate }) => {
     const settings = expression ? evaluate(expression) : {};
     const config = modifiers.length > 0 ? buildDirectiveConfigFromModifiers(modifiers, settings) : {};
+    let cleanup = null;
     if (config.float.strategy == "fixed") {
       panel.style.position = "fixed";
     }
     const clickAway = (event) => panel.parentElement && !panel.parentElement.closest("[x-data]").contains(event.target) ? panel.close() : null;
     const keyEscape = (event) => event.key === "Escape" ? panel.close() : null;
-    async function update() {
-      return await computePosition2(panel.trigger, panel, config.float).then(({ middlewareData, placement, x, y }) => {
-        var _a, _b;
-        if (middlewareData.arrow) {
-          const ax = (_a = middlewareData.arrow) == null ? void 0 : _a.x;
-          const ay = (_b = middlewareData.arrow) == null ? void 0 : _b.y;
-          const aEl = config.float.middleware.filter((middleware) => middleware.name == "arrow")[0].options.element;
-          const staticSide = {
-            top: "bottom",
-            right: "left",
-            bottom: "top",
-            left: "right"
-          }[placement.split("-")[0]];
-          Object.assign(aEl.style, {
-            left: ax != null ? `${ax}px` : "",
-            top: ay != null ? `${ay}px` : "",
-            right: "",
-            bottom: "",
-            [staticSide]: "-4px"
-          });
-        }
-        if (middlewareData.hide) {
-          const { referenceHidden } = middlewareData.hide;
-          Object.assign(panel.style, {
-            visibility: referenceHidden ? "hidden" : "visible"
-          });
-        }
-        Object.assign(panel.style, {
-          left: `${x}px`,
-          top: `${y}px`
-        });
-      });
-    }
     const refName = panel.getAttribute("x-ref");
     const component = panel.parentElement.closest("[x-data]");
     const atTrigger = component.querySelectorAll(`[\\@click^="$refs.${refName}"]`);
@@ -1530,7 +1498,39 @@ function src_default(Alpine) {
       panel.trigger.setAttribute("aria-expanded", true);
       if (config.component.trap)
         panel.setAttribute("x-trap", true);
-      await update();
+      cleanup = autoUpdate(panel.trigger, panel, () => {
+        computePosition2(panel.trigger, panel, config.float).then(({ middlewareData, placement, x, y }) => {
+          var _a, _b;
+          if (middlewareData.arrow) {
+            const ax = (_a = middlewareData.arrow) == null ? void 0 : _a.x;
+            const ay = (_b = middlewareData.arrow) == null ? void 0 : _b.y;
+            const aEl = config.float.middleware.filter((middleware) => middleware.name == "arrow")[0].options.element;
+            const staticSide = {
+              top: "bottom",
+              right: "left",
+              bottom: "top",
+              left: "right"
+            }[placement.split("-")[0]];
+            Object.assign(aEl.style, {
+              left: ax != null ? `${ax}px` : "",
+              top: ay != null ? `${ay}px` : "",
+              right: "",
+              bottom: "",
+              [staticSide]: "-4px"
+            });
+          }
+          if (middlewareData.hide) {
+            const { referenceHidden } = middlewareData.hide;
+            Object.assign(panel.style, {
+              visibility: referenceHidden ? "hidden" : "visible"
+            });
+          }
+          Object.assign(panel.style, {
+            left: `${x}px`,
+            top: `${y}px`
+          });
+        });
+      });
       window.addEventListener("click", clickAway);
       window.addEventListener("keydown", keyEscape, true);
     };
@@ -1540,7 +1540,7 @@ function src_default(Alpine) {
       panel.trigger.setAttribute("aria-expanded", false);
       if (config.component.trap)
         panel.setAttribute("x-trap", false);
-      autoUpdate(panel.trigger, panel, update);
+      cleanup();
       window.removeEventListener("click", clickAway);
       window.removeEventListener("keydown", keyEscape, false);
     };
