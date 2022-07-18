@@ -7,6 +7,7 @@ export const buildDirectiveConfigFromModifiers = (modifiers, settings) => {
     },
     float: {
       placement: "bottom",
+      strategy: "absolute",
       middleware: [],
     },
   };
@@ -17,6 +18,10 @@ export const buildDirectiveConfigFromModifiers = (modifiers, settings) => {
 
   if (modifiers.includes("trap")) {
     config.component.trap = true;
+  }
+
+  if (modifiers.includes("teleport")) {
+    config.float.strategy = "fixed";
   }
 
   if (modifiers.includes("offset")) {

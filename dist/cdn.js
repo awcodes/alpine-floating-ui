@@ -1294,6 +1294,7 @@
       },
       float: {
         placement: "bottom",
+        strategy: "absolute",
         middleware: []
       }
     };
@@ -1302,6 +1303,9 @@
     };
     if (modifiers.includes("trap")) {
       config.component.trap = true;
+    }
+    if (modifiers.includes("teleport")) {
+      config.float.strategy = "fixed";
     }
     if (modifiers.includes("offset")) {
       config.float.middleware.push(offset(settings["offset"] || 10));
@@ -1449,6 +1453,9 @@
     Alpine.directive("float", (panel, { modifiers, expression }, { evaluate }) => {
       const settings = expression ? evaluate(expression) : {};
       const config = modifiers.length > 0 ? buildDirectiveConfigFromModifiers(modifiers, settings) : {};
+      if (config.float.strategy == "fixed") {
+        panel.style.position = "fixed";
+      }
       const clickAway = (event) => panel.parentElement && !panel.parentElement.closest("[x-data]").contains(event.target) ? panel.close() : null;
       const keyEscape = (event) => event.key === "Escape" ? panel.close() : null;
       async function update() {

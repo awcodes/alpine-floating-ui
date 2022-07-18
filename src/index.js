@@ -135,6 +135,10 @@ export default function (Alpine) {
     const settings = expression ? evaluate(expression) : {};
     const config = modifiers.length > 0 ? buildDirectiveConfigFromModifiers(modifiers, settings) : {};
 
+    if (config.float.strategy == "fixed") {
+      panel.style.position = "fixed";
+    }
+
     const clickAway = (event) => (panel.parentElement && !panel.parentElement.closest("[x-data]").contains(event.target) ? panel.close() : null);
     const keyEscape = (event) => (event.key === "Escape" ? panel.close() : null);
 
