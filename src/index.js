@@ -2,6 +2,8 @@ import { computePosition, autoUpdate, autoPlacement } from "@floating-ui/dom";
 import { buildConfigFromModifiers } from "./buildConfigFromModifiers";
 import { buildDirectiveConfigFromModifiers } from "./buildDirectiveConfigFromModifiers";
 import { randomString } from "./randomString";
+import { mutateDom } from "alpinejs/src/mutation";
+import { once } from "alpinejs/src/utils/once";
 
 export default function (Alpine) {
   const defaultOptions = {
@@ -131,7 +133,7 @@ export default function (Alpine) {
     };
   });
 
-  Alpine.directive("float", (panel, { modifiers, expression }, { evaluate }) => {
+  Alpine.directive("float", (panel, { modifiers, expression }, { evaluate, effect }) => {
     const settings = expression ? evaluate(expression) : {};
     const config = modifiers.length > 0 ? buildDirectiveConfigFromModifiers(modifiers, settings) : {};
     let cleanup = null;
@@ -149,17 +151,76 @@ export default function (Alpine) {
     const atTrigger = component.querySelectorAll(`[\\@click^="$refs.${refName}"]`);
     const xTrigger = component.querySelectorAll(`[x-on\\:click^="$refs.${refName}"]`);
 
+    panel.style.setProperty("display", "none");
+
     setupA11y(component, [...atTrigger, ...xTrigger][0], panel);
 
-    panel.isOpen = false;
+    panel._x_isShown = false;
     panel.trigger = null;
+
+    if (!panel._x_doHide)
+      panel._x_doHide = () => {
+        mutateDom(() => {
+          panel.style.setProperty("display", "none", modifiers.includes("important") ? "important" : undefined);
+        });
+      };
+
+    if (!panel._x_doShow)
+      panel._x_doShow = () => {
+        mutateDom(() => {
+          panel.style.setProperty("display", "block", modifiers.includes("important") ? "important" : undefined);
+        });
+      };
+
+    let hide = () => {
+      panel._x_doHide();
+      panel._x_isShown = false;
+    };
+
+    let show = () => {
+      panel._x_doShow();
+      panel._x_isShown = true;
+    };
+
+    let clickAwayCompatibleShow = () => setTimeout(show);
+
+    let toggle = once(
+      (value) => (value ? show() : hide()),
+      (value) => {
+        if (typeof panel._x_toggleAndCascadeWithTransitions === "function") {
+          panel._x_toggleAndCascadeWithTransitions(panel, value, show, hide);
+        } else {
+          value ? clickAwayCompatibleShow() : hide();
+        }
+      }
+    );
+
+    let oldValue;
+    let firstTime = true;
+
+    effect(() =>
+      evaluate((value) => {
+        // Let's make sure we only call this effect if the value changed.
+        // This prevents "blip" transitions. (1 tick out, then in)
+        if (!firstTime && value === oldValue) return;
+
+        if (modifiers.includes("immediate")) value ? clickAwayCompatibleShow() : hide();
+
+        toggle(value);
+
+        oldValue = value;
+        firstTime = false;
+      })
+    );
 
     panel.open = async function (event) {
       panel.trigger = event.currentTarget ? event.currentTarget : event;
 
-      panel.isOpen = true;
+      // if (typeof panel._x_toggleAndCascadeWithTransitions === "function") {
+      //   panel._x_toggleAndCascadeWithTransitions(panel, true, show, hide);
+      // }
 
-      panel.style.display = "block";
+      toggle(true);
 
       panel.trigger.setAttribute("aria-expanded", true);
 
@@ -208,9 +269,10 @@ export default function (Alpine) {
     };
 
     panel.close = function () {
-      panel.isOpen = false;
-
-      panel.style.display = "";
+      // if (typeof panel._x_toggleAndCascadeWithTransitions === "function") {
+      //   panel._x_toggleAndCascadeWithTransitions(panel, false, show, hide);
+      // }
+      toggle(false);
 
       panel.trigger.setAttribute("aria-expanded", false);
 
@@ -223,7 +285,7 @@ export default function (Alpine) {
     };
 
     panel.toggle = function (event) {
-      panel.isOpen ? panel.close() : panel.open(event);
+      panel._x_isShown ? panel.close() : panel.open(event);
     };
   });
 }
