@@ -62,7 +62,13 @@
     <main>
       <div class="component" x-data="{}">
         <button @click="$refs.panel.toggle">Directive</button>
-        <div x-ref="panel" class="panel" x-float.flip.offset.teleport>
+        <div x-ref="panel" class="panel" x-float.flip.offset.teleport
+          x-transition:enter="ease duration-500"
+          x-transition:enter-start="opacity-0 -translate-y-2"
+          x-transition:enter-end="opacity-100 translate-y-0"
+          x-transition:leave="ease duration-500"
+          x-transition:leave-start="opacity-100 translate-y-0"
+          x-transition:leave-end="opacity-0 translate-y-2">
           <ul>
             <li><button>Button 1</button></li>
             <li><button>Button 2</button></li>
@@ -81,41 +87,19 @@
           arrow: {
             element: $refs.arrow
           }
-        }">
-          <ul>
-            <li><button>Button 1</button></li>
-            <li><button>Button 2</button></li>
-            <li><button>Button 3</button></li>
-          </ul>
-          <div x-ref="arrow" class="arrow"></div>
-        </div>
-      </div>
-
-      <div class="component" x-data>
-        <button @click="$float({offset: 10}, {trap: true})">Click over me!</button>
-        <div x-ref="panel" class="panel">
-          <ul>
-            <li><button>Button 1</button></li>
-            <li><button>Button 2</button></li>
-            <li><button>Button 3</button></li>
-          </ul>
-        </div>
-      </div>
-
-      <div class="component" x-data>
-        <button
-          x-on:click="$float({
-          offset: 10,
-          placement: 'top',
-          arrow: {
-            element: $refs.arrow
-          }
-        })"
+        }"
+        x-transition:enter="ease duration-500"
+        x-transition:enter-start="opacity-0 -translate-y-2"
+        x-transition:enter-end="opacity-100 translate-y-0"
+        x-transition:leave="ease duration-500"
+        x-transition:leave-start="opacity-100 translate-y-0"
+        x-transition:leave-end="opacity-0 translate-y-2"
         >
-          Click over me!
-        </button>
-        <div x-ref="panel" class="panel">
-          I'm floating 2!
+          <ul>
+            <li><button>Button 1</button></li>
+            <li><button>Button 2</button></li>
+            <li><button>Button 3</button></li>
+          </ul>
           <div x-ref="arrow" class="arrow"></div>
         </div>
       </div>
