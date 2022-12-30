@@ -1,4 +1,4 @@
-import { flip, inline, offset, shift, autoPlacement, arrow, hide } from "@floating-ui/dom";
+import { flip, inline, offset, shift, autoPlacement, arrow, size, hide } from "@floating-ui/dom";
 
 export const buildDirectiveConfigFromModifiers = (modifiers, settings) => {
   const config = {
@@ -54,6 +54,10 @@ export const buildDirectiveConfigFromModifiers = (modifiers, settings) => {
 
   if (modifiers.includes("hide")) {
     config.float.middleware.push(hide(settings["hide"]));
+  }
+  
+  if (modifiers.includes("size")) {
+    config.float.middleware.push(size(settings["size"]));
   }
 
   return config;
