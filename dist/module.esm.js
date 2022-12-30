@@ -698,6 +698,61 @@ var shift = function(options) {
     }
   };
 };
+var size = function(options) {
+  if (options === void 0) {
+    options = {};
+  }
+  return {
+    name: "size",
+    options,
+    async fn(middlewareArguments) {
+      const {
+        placement,
+        rects,
+        platform: platform2,
+        elements
+      } = middlewareArguments;
+      const {
+        apply,
+        ...detectOverflowOptions
+      } = options;
+      const overflow = await detectOverflow(middlewareArguments, detectOverflowOptions);
+      const side = getSide(placement);
+      const alignment = getAlignment(placement);
+      let heightSide;
+      let widthSide;
+      if (side === "top" || side === "bottom") {
+        heightSide = side;
+        widthSide = alignment === (await (platform2.isRTL == null ? void 0 : platform2.isRTL(elements.floating)) ? "start" : "end") ? "left" : "right";
+      } else {
+        widthSide = side;
+        heightSide = alignment === "end" ? "top" : "bottom";
+      }
+      const xMin = max(overflow.left, 0);
+      const xMax = max(overflow.right, 0);
+      const yMin = max(overflow.top, 0);
+      const yMax = max(overflow.bottom, 0);
+      const dimensions = {
+        height: rects.floating.height - (["left", "right"].includes(placement) ? 2 * (yMin !== 0 || yMax !== 0 ? yMin + yMax : max(overflow.top, overflow.bottom)) : overflow[heightSide]),
+        width: rects.floating.width - (["top", "bottom"].includes(placement) ? 2 * (xMin !== 0 || xMax !== 0 ? xMin + xMax : max(overflow.left, overflow.right)) : overflow[widthSide])
+      };
+      const prevDimensions = await platform2.getDimensions(elements.floating);
+      apply == null ? void 0 : apply({
+        ...dimensions,
+        ...rects
+      });
+      const nextDimensions = await platform2.getDimensions(elements.floating);
+      if (prevDimensions.width !== nextDimensions.width || prevDimensions.height !== nextDimensions.height) {
+        return {
+          reset: {
+            rects: true
+          }
+        };
+      }
+      return {};
+    }
+  };
+};
 var inline = function(options) {
   if (options === void 0) {
     options = {};
@@ -910,7 +965,11 @@ function isScaled(element) {
 function getRectRelativeToOffsetParent(element, offsetParent, strategy) {
   const isOffsetParentAnElement = isHTMLElement(offsetParent);
   const documentElement = getDocumentElement(offsetParent);
-  const rect = getBoundingClientRect(element, isOffsetParentAnElement && isScaled(offsetParent), strategy === "fixed");
+  const rect = getBoundingClientRect(
+    element,
+    isOffsetParentAnElement && isScaled(offsetParent),
+    strategy === "fixed"
+  );
   let scroll = {
     scrollLeft: 0,
     scrollTop: 0
@@ -1282,6 +1341,9 @@ var buildConfigFromModifiers = (modifiers) => {
   if (keys.includes("hide")) {
     config.middleware.push(hide(getModifierArgument("hide")));
   }
+  if (keys.includes("size")) {
+    config.middleware.push(size(getModifierArgument("size")));
+  }
   return config;
 };
 
@@ -1329,6 +1391,9 @@ var buildDirectiveConfigFromModifiers = (modifiers, settings) => {
   }
   if (modifiers.includes("hide")) {
     config.float.middleware.push(hide(settings["hide"]));
+  }
+  if (modifiers.includes("size")) {
+    config.float.middleware.push(size(settings["size"]));
   }
   return config;
 };
@@ -1585,11 +1650,15 @@ function src_default(Alpine) {
             togglePanel();
           }
         });
-        window.addEventListener("keydown", (event) => {
-          if (event.key === "Escape" && isFloating()) {
-            togglePanel();
-          }
-        }, true);
+        window.addEventListener(
+          "keydown",
+          (event) => {
+            if (event.key === "Escape" && isFloating()) {
+              togglePanel();
+            }
+          },
+          true
+        );
       }
       togglePanel();
     };
@@ -1632,24 +1701,29 @@ function src_default(Alpine) {
       panel._x_isShown = true;
     };
     let clickAwayCompatibleShow = () => setTimeout(show);
-    let toggle = once((value) => value ? show() : hide2(), (value) => {
-      if (typeof panel._x_toggleAndCascadeWithTransitions === "function") {
-        panel._x_toggleAndCascadeWithTransitions(panel, value, show, hide2);
-      } else {
-        value ? clickAwayCompatibleShow() : hide2();
+    let toggle = once(
+      (value) => value ? show() : hide2(),
+      (value) => {
+        if (typeof panel._x_toggleAndCascadeWithTransitions === "function") {
+          panel._x_toggleAndCascadeWithTransitions(panel, value, show, hide2);
+        } else {
+          value ? clickAwayCompatibleShow() : hide2();
+        }
       }
-    });
+    );
     let oldValue;
     let firstTime = true;
-    effect(() => evaluate((value) => {
-      if (!firstTime && value === oldValue)
-        return;
-      if (modifiers.includes("immediate"))
-        value ? clickAwayCompatibleShow() : hide2();
-      toggle(value);
-      oldValue = value;
-      firstTime = false;
-    }));
+    effect(
+      () => evaluate((value) => {
+        if (!firstTime && value === oldValue)
+          return;
+        if (modifiers.includes("immediate"))
+          value ? clickAwayCompatibleShow() : hide2();
+        toggle(value);
+        oldValue = value;
+        firstTime = false;
+      })
+    );
     panel.open = async function(event) {
       panel.trigger = event.currentTarget ? event.currentTarget : event;
       toggle(true);
