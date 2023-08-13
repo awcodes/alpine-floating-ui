@@ -1793,6 +1793,9 @@ function src_default(Alpine) {
       window.addEventListener("keydown", keyEscape, true);
     };
     panel.close = function() {
+      if (!panel._x_isShown) {
+        return false;
+      }
       toggle(false);
       panel.trigger.setAttribute("aria-expanded", false);
       if (config.component.trap)
