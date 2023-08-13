@@ -269,9 +269,14 @@ export default function (Alpine) {
     };
 
     panel.close = function () {
+      if (! panel._x_isShown) {
+        return false;
+      }
+      
       // if (typeof panel._x_toggleAndCascadeWithTransitions === "function") {
       //   panel._x_toggleAndCascadeWithTransitions(panel, false, show, hide);
       // }
+      
       toggle(false);
 
       panel.trigger.setAttribute("aria-expanded", false);
