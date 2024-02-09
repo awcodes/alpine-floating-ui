@@ -1,0 +1,152 @@
+---
+import Layout from "../layouts/Layout.astro";
+import Button from "../components/Button.astro";
+import Panel from "../components/Panel.astro";
+---
+
+<Layout title="Alpine.js Floating UI Plugin">
+	<header class="bg-gray-950 p-4">
+		<div class="max-w-5xl mx-auto">
+			<h1 class="text-white font-bold text-3xl">
+				Alpine.js Floating UI Examples
+			</h1>
+		</div>
+	</header>
+	<main class="max-w-5xl mx-auto">
+		<section class="py-8 lg:py-12">
+			<h2 class="text-white text-2xl text-white mb-2">Directive (x-float)</h2>
+
+			<div class="flex flex-col lg:flex-row items-center gap-4">
+				<!-- Directive -->
+				<div x-data>
+					<Button @click="$refs.panel.toggle">Directive</Button>
+					<Panel x-ref="panel" x-float.flip.offset.teleport>
+						<ul>
+							<li><button>Button 1</button></li>
+							<li><button>Button 2</button></li>
+							<li><button>Button 3</button></li>
+						</ul>
+					</Panel>
+				</div>
+
+				<!-- Directive with settings -->
+				<div x-data>
+					<Button @click="$refs.panel.toggle">Directive with settings</Button>
+					<Panel
+						x-ref="panel"
+						x-float.flip.offset.trap.arrow={`{
+							offset: 30,
+							arrow: {
+								element: $refs.arrow
+							}
+						}`}
+					>
+						<ul>
+							<li><button>Button 1</button></li>
+							<li><button>Button 2</button></li>
+							<li><button>Button 3</button></li>
+						</ul>
+						<div x-ref="arrow" class="arrow"></div>
+					</Panel>
+				</div>
+
+				<!-- Directive with transitions -->
+				<div x-data>
+					<Button @click="$refs.panel.toggle">Directive with transitions</Button>
+					<Panel
+						x-ref="panel"
+						x-float.flip.offset.teleport
+						x-transition:enter="ease duration-500"
+						x-transition:enter-start="opacity-0 -translate-y-2"
+						x-transition:enter-end="opacity-100 translate-y-0"
+						x-transition:leave="ease duration-500"
+						x-transition:leave-start="opacity-100 translate-y-0"
+						x-transition:leave-end="opacity-0 translate-y-2"
+					>
+						<ul>
+							<li><button>Button 1</button></li>
+							<li><button>Button 2</button></li>
+							<li><button>Button 3</button></li>
+						</ul>
+					</Panel>
+				</div>
+
+				<!-- Directive with transitions and settings -->
+				<div x-data>
+					<Button @click="$refs.panel.toggle">Directive with settings and transitions</Button>
+					<Panel
+						x-ref="panel"
+						x-float.flip.offset.trap.arrow={`{
+							offset: 30,
+							arrow: {
+								element: $refs.arrow
+							}
+						}`}
+						x-transition:enter="ease duration-500"
+						x-transition:enter-start="opacity-0 -translate-y-2"
+						x-transition:enter-end="opacity-100 translate-y-0"
+						x-transition:leave="ease duration-500"
+						x-transition:leave-start="opacity-100 translate-y-0"
+						x-transition:leave-end="opacity-0 translate-y-2"
+					>
+						<ul>
+							<li><button>Button 1</button></li>
+							<li><button>Button 2</button></li>
+							<li><button>Button 3</button></li>
+						</ul>
+						<div x-ref="arrow" class="arrow"></div>
+					</Panel>
+				</div>
+			</div>
+		</section>
+
+		<section class="py-8 lg:py-12">
+			<h2 class="text-white text-2xl text-white mb-2">Directive (x-float)</h2>
+
+			<div class="flex flex-col lg:flex-row items-center gap-4">
+				<!-- Magic -->
+				<div x-data>
+					<Button @click="$float({offset: 10}, {trap: true})">
+						Magic
+					</Button>
+					<Panel x-ref="panel">
+						<ul>
+							<li><button>Button 1</button></li>
+							<li><button>Button 2</button></li>
+							<li><button>Button 3</button></li>
+						</ul>
+					</Panel>
+				</div>
+
+				<!-- Magic with settings -->
+				<div x-data>
+					<Button
+						x-on:click={`$float({
+							offset: 10,
+							placement: 'top',
+							arrow: {
+								element: $refs.arrow
+							}
+						})`}
+					>
+						Magic with settings
+					</Button>
+					<Panel x-ref="panel">
+						I'm floating 2!
+						<div x-ref="arrow" class="arrow"></div>
+					</Panel>
+				</div>
+			</div>
+		</section>
+	</main>
+</Layout>
+
+<style>
+.arrow {
+    position: absolute;
+    background: inherit;
+    width: 8px;
+    height: 8px;
+    transform: rotate(45deg);
+}
+</style>

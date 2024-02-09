@@ -20,7 +20,7 @@
   "type": "module",
   "devDependencies": {
     "@alpinejs/focus": "^3.10.2",
-    "@floating-ui/dom": "^0.4.2",
+    "@floating-ui/dom": "^1.6.1",
     "alpinejs": "^3.10.2",
     "brotli-size": "^4.0.0",
     "esbuild": "^0.14.29"
