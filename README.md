@@ -51,6 +51,10 @@ See the [Floating UI Tutorial](https://floating-ui.com/docs/tutorial) for infoma
 To create a Floating UI component, use the `$float` magic on the trigger element and apply an `x-ref` to your 'panel'. Don't forget to have `x-data` on the root element of your component.
 
 ```html
+<style>
+  .panel { display: none; }
+</style>
+
 <div class="component" x-data>
   <button @click="$float()">I have a floating panel. Woot!</button>
   <div x-ref="panel" class="panel">I'm floating</div>
