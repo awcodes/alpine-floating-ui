@@ -20,7 +20,7 @@ import Panel from "../components/Panel.astro";
 				<!-- Directive -->
 				<div x-data>
 					<Button @click="$refs.panel.toggle">Directive</Button>
-					<Panel x-ref="panel" x-float.flip.offset.teleport>
+					<Panel x-ref="panel" x-float.flip.offset>
 						<ul>
 							<li><button>Button 1</button></li>
 							<li><button>Button 2</button></li>
@@ -55,7 +55,7 @@ import Panel from "../components/Panel.astro";
 					<Button @click="$refs.panel.toggle">Directive with transitions</Button>
 					<Panel
 						x-ref="panel"
-						x-float.flip.offset.teleport
+						x-float.flip.offset
 						x-transition:enter="ease duration-500"
 						x-transition:enter-start="opacity-0 -translate-y-2"
 						x-transition:enter-end="opacity-100 translate-y-0"
@@ -101,7 +101,7 @@ import Panel from "../components/Panel.astro";
 		</section>
 
 		<section class="py-8 lg:py-12">
-			<h2 class="text-white text-2xl text-white mb-2">Directive (x-float)</h2>
+			<h2 class="text-white text-2xl text-white mb-2">Magic ($float)</h2>
 
 			<div class="flex flex-col lg:flex-row items-center gap-4">
 				<!-- Magic -->

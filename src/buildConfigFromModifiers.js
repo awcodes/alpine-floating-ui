@@ -4,6 +4,7 @@ export const buildConfigFromModifiers = (modifiers) => {
 
   const config = {
     placement: "bottom",
+    strategy: "absolute",
     middleware: [],
   };
 
@@ -15,6 +16,10 @@ export const buildConfigFromModifiers = (modifiers) => {
 
   if (keys.includes("offset")) {
     config.middleware.push(offset(getModifierArgument("offset")));
+  }
+
+  if (keys.includes("teleport")) {
+    config.strategy = "fixed";
   }
 
   if (keys.includes("placement")) {

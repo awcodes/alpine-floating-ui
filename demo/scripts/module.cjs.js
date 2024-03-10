@@ -1185,8 +1185,9 @@ function getBoundingClientRect(element, includeScale, isFixedStrategy, offsetPar
   if (domElement) {
     const win = getWindow(domElement);
     const offsetWin = offsetParent && isElement(offsetParent) ? getWindow(offsetParent) : offsetParent;
-    let currentIFrame = win.frameElement;
-    while (currentIFrame && offsetParent && offsetWin !== win) {
+    let currentWin = win;
+    let currentIFrame = currentWin.frameElement;
+    while (currentIFrame && offsetParent && offsetWin !== currentWin) {
       const iframeScale = getScale(currentIFrame);
       const iframeRect = currentIFrame.getBoundingClientRect();
       const css = getComputedStyle(currentIFrame);
@@ -1198,7 +1199,8 @@ function getBoundingClientRect(element, includeScale, isFixedStrategy, offsetPar
       height *= iframeScale.y;
       x += left;
       y += top;
-      currentIFrame = getWindow(currentIFrame).frameElement;
+      currentWin = getWindow(currentIFrame);
+      currentIFrame = currentWin.frameElement;
     }
   }
   return rectToClientRect({
@@ -1209,28 +1211,14 @@ function getBoundingClientRect(element, includeScale, isFixedStrategy, offsetPar
   });
 }
 var topLayerSelectors = [":popover-open", ":modal"];
-function topLayer(floating) {
-  let isTopLayer = false;
-  let x = 0;
-  let y = 0;
-  function setIsTopLayer(selector) {
+function isTopLayer(floating) {
+  return topLayerSelectors.some((selector) => {
     try {
-      isTopLayer = isTopLayer || floating.matches(selector);
+      return floating.matches(selector);
     } catch (e) {
+      return false;
     }
-  }
-  topLayerSelectors.forEach((selector) => {
-    setIsTopLayer(selector);
   });
-  if (isTopLayer) {
-    const containingBlock = getContainingBlock(floating);
-    if (containingBlock) {
-      const rect = containingBlock.getBoundingClientRect();
-      x = rect.x;
-      y = rect.y;
-    }
-  }
-  return [isTopLayer, x, y];
 }
 function convertOffsetParentRelativeRectToViewportRelativeRect(_ref) {
   let {
@@ -1239,9 +1227,10 @@ function convertOffsetParentRelativeRectToViewportRelativeRect(_ref) {
     offsetParent,
     strategy
   } = _ref;
+  const isFixed = strategy === "fixed";
   const documentElement = getDocumentElement(offsetParent);
-  const [isTopLayer] = elements ? topLayer(elements.floating) : [false];
-  if (offsetParent === documentElement || isTopLayer) {
+  const topLayer = elements ? isTopLayer(elements.floating) : false;
+  if (offsetParent === documentElement || topLayer && isFixed) {
     return rect;
   }
   let scroll = {
@@ -1251,7 +1240,7 @@ function convertOffsetParentRelativeRectToViewportRelativeRect(_ref) {
   let scale = createCoords(1);
   const offsets = createCoords(0);
   const isOffsetParentAnElement = isHTMLElement(offsetParent);
-  if (isOffsetParentAnElement || !isOffsetParentAnElement && strategy !== "fixed") {
+  if (isOffsetParentAnElement || !isOffsetParentAnElement && !isFixed) {
     if (getNodeName(offsetParent) !== "body" || isOverflowElement(documentElement)) {
       scroll = getNodeScroll(offsetParent);
     }
@@ -1419,7 +1408,7 @@ function getDimensions(element) {
     height
   };
 }
-function getRectRelativeToOffsetParent(element, offsetParent, strategy, floating) {
+function getRectRelativeToOffsetParent(element, offsetParent, strategy) {
   const isOffsetParentAnElement = isHTMLElement(offsetParent);
   const documentElement = getDocumentElement(offsetParent);
   const isFixed = strategy === "fixed";
@@ -1441,17 +1430,8 @@ function getRectRelativeToOffsetParent(element, offsetParent, strategy, floating
       offsets.x = getWindowScrollBarX(documentElement);
     }
   }
-  let x = rect.left + scroll.scrollLeft - offsets.x;
-  let y = rect.top + scroll.scrollTop - offsets.y;
-  const [isTopLayer, topLayerX, topLayerY] = topLayer(floating);
-  if (isTopLayer) {
-    x += topLayerX;
-    y += topLayerY;
-    if (isOffsetParentAnElement) {
-      x += offsetParent.clientLeft;
-      y += offsetParent.clientTop;
-    }
-  }
+  const x = rect.left + scroll.scrollLeft - offsets.x;
+  const y = rect.top + scroll.scrollTop - offsets.y;
   return {
     x,
     y,
@@ -1470,7 +1450,7 @@ function getTrueOffsetParent(element, polyfill) {
 }
 function getOffsetParent(element, polyfill) {
   const window2 = getWindow(element);
-  if (!isHTMLElement(element)) {
+  if (!isHTMLElement(element) || isTopLayer(element)) {
     return window2;
   }
   let offsetParent = getTrueOffsetParent(element, polyfill);
@@ -1486,7 +1466,7 @@ var getElementRects = async function(data) {
   const getOffsetParentFn = this.getOffsetParent || getOffsetParent;
   const getDimensionsFn = this.getDimensions;
   return {
-    reference: getRectRelativeToOffsetParent(data.reference, await getOffsetParentFn(data.floating), data.strategy, data.floating),
+    reference: getRectRelativeToOffsetParent(data.reference, await getOffsetParentFn(data.floating), data.strategy),
     floating: {
       x: 0,
       y: 0,
@@ -1673,6 +1653,7 @@ var computePosition2 = (reference, floating, options) => {
 var buildConfigFromModifiers = (modifiers) => {
   const config = {
     placement: "bottom",
+    strategy: "absolute",
     middleware: []
   };
   const keys = Object.keys(modifiers);
@@ -1681,6 +1662,9 @@ var buildConfigFromModifiers = (modifiers) => {
   };
   if (keys.includes("offset")) {
     config.middleware.push(offset(getModifierArgument("offset")));
+  }
+  if (keys.includes("teleport")) {
+    config.strategy = "fixed";
   }
   if (keys.includes("placement")) {
     config.placement = getModifierArgument("placement");
@@ -1773,137 +1757,6 @@ var randomString = (length) => {
   return str;
 };
 
-// node_modules/alpinejs/src/mutation.js
-var onAttributeAddeds = [];
-var onElRemoveds = [];
-var onElAddeds = [];
-function cleanupAttributes(el, names) {
-  if (!el._x_attributeCleanups)
-    return;
-  Object.entries(el._x_attributeCleanups).forEach(([name, value]) => {
-    if (names === void 0 || names.includes(name)) {
-      value.forEach((i) => i());
-      delete el._x_attributeCleanups[name];
-    }
-  });
-}
-var observer = new MutationObserver(onMutate);
-var currentlyObserving = false;
-function startObservingMutations() {
-  observer.observe(document, { subtree: true, childList: true, attributes: true, attributeOldValue: true });
-  currentlyObserving = true;
-}
-function stopObservingMutations() {
-  flushObserver();
-  observer.disconnect();
-  currentlyObserving = false;
-}
-var recordQueue = [];
-var willProcessRecordQueue = false;
-function flushObserver() {
-  recordQueue = recordQueue.concat(observer.takeRecords());
-  if (recordQueue.length && !willProcessRecordQueue) {
-    willProcessRecordQueue = true;
-    queueMicrotask(() => {
-      processRecordQueue();
-      willProcessRecordQueue = false;
-    });
-  }
-}
-function processRecordQueue() {
-  onMutate(recordQueue);
-  recordQueue.length = 0;
-}
-function mutateDom(callback) {
-  if (!currentlyObserving)
-    return callback();
-  stopObservingMutations();
-  let result = callback();
-  startObservingMutations();
-  return result;
-}
-var isCollecting = false;
-var deferredMutations = [];
-function onMutate(mutations) {
-  if (isCollecting) {
-    deferredMutations = deferredMutations.concat(mutations);
-    return;
-  }
-  let addedNodes = [];
-  let removedNodes = [];
-  let addedAttributes = /* @__PURE__ */ new Map();
-  let removedAttributes = /* @__PURE__ */ new Map();
-  for (let i = 0; i < mutations.length; i++) {
-    if (mutations[i].target._x_ignoreMutationObserver)
-      continue;
-    if (mutations[i].type === "childList") {
-      mutations[i].addedNodes.forEach((node) => node.nodeType === 1 && addedNodes.push(node));
-      mutations[i].removedNodes.forEach((node) => node.nodeType === 1 && removedNodes.push(node));
-    }
-    if (mutations[i].type === "attributes") {
-      let el = mutations[i].target;
-      let name = mutations[i].attributeName;
-      let oldValue = mutations[i].oldValue;
-      let add = () => {
-        if (!addedAttributes.has(el))
-          addedAttributes.set(el, []);
-        addedAttributes.get(el).push({ name, value: el.getAttribute(name) });
-      };
-      let remove = () => {
-        if (!removedAttributes.has(el))
-          removedAttributes.set(el, []);
-        removedAttributes.get(el).push(name);
-      };
-      if (el.hasAttribute(name) && oldValue === null) {
-        add();
-      } else if (el.hasAttribute(name)) {
-        remove();
-        add();
-      } else {
-        remove();
-      }
-    }
-  }
-  removedAttributes.forEach((attrs, el) => {
-    cleanupAttributes(el, attrs);
-  });
-  addedAttributes.forEach((attrs, el) => {
-    onAttributeAddeds.forEach((i) => i(el, attrs));
-  });
-  for (let node of removedNodes) {
-    if (addedNodes.includes(node))
-      continue;
-    onElRemoveds.forEach((i) => i(node));
-    if (node._x_cleanups) {
-      while (node._x_cleanups.length)
-        node._x_cleanups.pop()();
-    }
-  }
-  addedNodes.forEach((node) => {
-    node._x_ignoreSelf = true;
-    node._x_ignore = true;
-  });
-  for (let node of addedNodes) {
-    if (removedNodes.includes(node))
-      continue;
-    if (!node.isConnected)
-      continue;
-    delete node._x_ignoreSelf;
-    delete node._x_ignore;
-    onElAddeds.forEach((i) => i(node));
-    node._x_ignore = true;
-    node._x_ignoreSelf = true;
-  }
-  addedNodes.forEach((node) => {
-    delete node._x_ignoreSelf;
-    delete node._x_ignore;
-  });
-  addedNodes = null;
-  removedNodes = null;
-  addedAttributes = null;
-  removedAttributes = null;
-}
-
 // node_modules/alpinejs/src/utils/once.js
 function once(callback, fallback = () => {
 }) {
@@ -1924,7 +1777,7 @@ function src_default(Alpine) {
     dismissable: true,
     trap: false
   };
-  function setupA11y(component, trigger, panel = null) {
+  function setupA11y(trigger, panel = null) {
     if (!trigger)
       return;
     if (!trigger.hasAttribute("aria-expanded")) {
@@ -1945,7 +1798,7 @@ function src_default(Alpine) {
   [...atMagicTrigger, ...xMagicTrigger].forEach((trigger) => {
     const component = trigger.parentElement.closest("[x-data]");
     const panel = component.querySelector('[x-ref="panel"]');
-    setupA11y(component, trigger, panel);
+    setupA11y(trigger, panel);
   });
   Alpine.magic("float", (el) => {
     return (modifiers = {}, settings = {}) => {
@@ -1958,17 +1811,17 @@ function src_default(Alpine) {
         return panel.style.display == "block";
       }
       function closePanel() {
-        panel.style.display = "";
-        trigger.setAttribute("aria-expanded", false);
+        panel.style.display = "none";
+        trigger.setAttribute("aria-expanded", "false");
         if (options.trap)
-          panel.setAttribute("x-trap", false);
+          panel.setAttribute("x-trap", "false");
         autoUpdate(el, panel, update);
       }
       function openPanel() {
         panel.style.display = "block";
-        trigger.setAttribute("aria-expanded", true);
+        trigger.setAttribute("aria-expanded", "true");
         if (options.trap)
-          panel.setAttribute("x-trap", true);
+          panel.setAttribute("x-trap", "true");
         update();
       }
       function togglePanel() {
@@ -1995,6 +1848,7 @@ function src_default(Alpine) {
               [staticSide]: "-4px"
             });
           }
+          console.log(config);
           if (middlewareData.hide) {
             const { referenceHidden } = middlewareData.hide;
             Object.assign(panel.style, {
@@ -2045,15 +1899,11 @@ function src_default(Alpine) {
     panel.trigger = null;
     if (!panel._x_doHide)
       panel._x_doHide = () => {
-        mutateDom(() => {
-          panel.style.setProperty("display", "none", modifiers.includes("important") ? "important" : void 0);
-        });
+        panel.style.setProperty("display", "none", modifiers.includes("important") ? "important" : void 0);
       };
     if (!panel._x_doShow)
       panel._x_doShow = () => {
-        mutateDom(() => {
-          panel.style.setProperty("display", "block", modifiers.includes("important") ? "important" : void 0);
-        });
+        panel.style.setProperty("display", "block", modifiers.includes("important") ? "important" : void 0);
       };
     let hide3 = () => {
       panel._x_doHide();
@@ -2090,9 +1940,9 @@ function src_default(Alpine) {
     panel.open = async function(event) {
       panel.trigger = event.currentTarget ? event.currentTarget : event;
       toggle(true);
-      panel.trigger.setAttribute("aria-expanded", true);
+      panel.trigger.setAttribute("aria-expanded", "true");
       if (config.component.trap)
-        panel.setAttribute("x-trap", true);
+        panel.setAttribute("x-trap", "true");
       cleanup = autoUpdate(panel.trigger, panel, () => {
         computePosition2(panel.trigger, panel, config.float).then(({ middlewareData, placement, x, y }) => {
           var _a, _b;
@@ -2134,9 +1984,9 @@ function src_default(Alpine) {
         return false;
       }
       toggle(false);
-      panel.trigger.setAttribute("aria-expanded", false);
+      panel.trigger.setAttribute("aria-expanded", "false");
       if (config.component.trap)
-        panel.setAttribute("x-trap", false);
+        panel.setAttribute("x-trap", "false");
       cleanup();
       window.removeEventListener("click", clickAway);
       window.removeEventListener("keydown", keyEscape, false);
