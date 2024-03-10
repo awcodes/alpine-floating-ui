@@ -25,6 +25,8 @@ function bundleFile(file) {
         bundle: true,
         platform: "browser",
         define: { CDN: true },
+      }).then(() => {
+        fs.copyFileSync(`dist/${file}`, `astro/public/scripts/${file}`)
       });
 
       // Build a minified version.
@@ -37,6 +39,7 @@ function bundleFile(file) {
         define: { CDN: true },
       }).then(() => {
         outputSize("floating-ui", `dist/${file.replace(".js", ".min.js")}`);
+        fs.copyFileSync(`dist/${file.replace(".js", ".min.js")}`, `astro/public/scripts/${file.replace(".js", ".min.js")}`)
       });
     },
 
@@ -47,6 +50,8 @@ function bundleFile(file) {
         bundle: true,
         platform: "neutral",
         mainFields: ["main", "module"],
+      }).then(() => {
+        fs.copyFileSync(`dist/${file.replace(".js", ".esm.js")}`, `astro/public/scripts/${file.replace(".js", ".esm.js")}`)
       });
 
       build({
@@ -55,6 +60,8 @@ function bundleFile(file) {
         bundle: true,
         target: ["node10.4"],
         platform: "node",
+      }).then(() => {
+        fs.copyFileSync(`dist/${file.replace(".js", ".cjs.js")}`, `astro/public/scripts/${file.replace(".js", ".cjs.js")}`)
       });
     },
   }[file]());

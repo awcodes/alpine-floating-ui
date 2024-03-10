@@ -2,7 +2,6 @@ import { computePosition, autoUpdate, autoPlacement } from "@floating-ui/dom";
 import { buildConfigFromModifiers } from "./buildConfigFromModifiers";
 import { buildDirectiveConfigFromModifiers } from "./buildDirectiveConfigFromModifiers";
 import { randomString } from "./randomString";
-import { mutateDom } from "alpinejs/src/mutation";
 import { once } from "alpinejs/src/utils/once";
 
 export default function (Alpine) {
@@ -11,7 +10,7 @@ export default function (Alpine) {
     trap: false,
   };
 
-  function setupA11y(component, trigger, panel = null) {
+  function setupA11y(trigger, panel = null) {
     if (!trigger) return;
 
     if (!trigger.hasAttribute("aria-expanded")) {
@@ -39,7 +38,7 @@ export default function (Alpine) {
   [...atMagicTrigger, ...xMagicTrigger].forEach((trigger) => {
     const component = trigger.parentElement.closest("[x-data]");
     const panel = component.querySelector('[x-ref="panel"]');
-    setupA11y(component, trigger, panel);
+    setupA11y(trigger, panel);
   });
 
   Alpine.magic("float", (el) => {
@@ -56,16 +55,16 @@ export default function (Alpine) {
       }
 
       function closePanel() {
-        panel.style.display = "";
-        trigger.setAttribute("aria-expanded", false);
-        if (options.trap) panel.setAttribute("x-trap", false);
+        panel.style.display = "none";
+        trigger.setAttribute("aria-expanded", "false");
+        if (options.trap) panel.setAttribute("x-trap", "false");
         autoUpdate(el, panel, update);
       }
 
       function openPanel() {
         panel.style.display = "block";
-        trigger.setAttribute("aria-expanded", true);
-        if (options.trap) panel.setAttribute("x-trap", true);
+        trigger.setAttribute("aria-expanded", "true");
+        if (options.trap) panel.setAttribute("x-trap", "true");
         update();
       }
 
@@ -160,16 +159,12 @@ export default function (Alpine) {
 
     if (!panel._x_doHide)
       panel._x_doHide = () => {
-        mutateDom(() => {
-          panel.style.setProperty("display", "none", modifiers.includes("important") ? "important" : undefined);
-        });
+        panel.style.setProperty("display", "none", modifiers.includes("important") ? "important" : undefined);
       };
 
     if (!panel._x_doShow)
       panel._x_doShow = () => {
-        mutateDom(() => {
-          panel.style.setProperty("display", "block", modifiers.includes("important") ? "important" : undefined);
-        });
+        panel.style.setProperty("display", "block", modifiers.includes("important") ? "important" : undefined);
       };
 
     let hide = () => {
@@ -200,8 +195,6 @@ export default function (Alpine) {
 
     effect(() =>
       evaluate((value) => {
-        // Let's make sure we only call this effect if the value changed.
-        // This prevents "blip" transitions. (1 tick out, then in)
         if (!firstTime && value === oldValue) return;
 
         if (modifiers.includes("immediate")) value ? clickAwayCompatibleShow() : hide();
@@ -216,15 +209,11 @@ export default function (Alpine) {
     panel.open = async function (event) {
       panel.trigger = event.currentTarget ? event.currentTarget : event;
 
-      // if (typeof panel._x_toggleAndCascadeWithTransitions === "function") {
-      //   panel._x_toggleAndCascadeWithTransitions(panel, true, show, hide);
-      // }
-
       toggle(true);
 
-      panel.trigger.setAttribute("aria-expanded", true);
+      panel.trigger.setAttribute("aria-expanded", "true");
 
-      if (config.component.trap) panel.setAttribute("x-trap", true);
+      if (config.component.trap) panel.setAttribute("x-trap", "true");
 
       cleanup = autoUpdate(panel.trigger, panel, () => {
         computePosition(panel.trigger, panel, config.float).then(({ middlewareData, placement, x, y }) => {
@@ -273,15 +262,11 @@ export default function (Alpine) {
         return false;
       }
       
-      // if (typeof panel._x_toggleAndCascadeWithTransitions === "function") {
-      //   panel._x_toggleAndCascadeWithTransitions(panel, false, show, hide);
-      // }
-      
       toggle(false);
 
-      panel.trigger.setAttribute("aria-expanded", false);
+      panel.trigger.setAttribute("aria-expanded", "false");
 
-      if (config.component.trap) panel.setAttribute("x-trap", false);
+      if (config.component.trap) panel.setAttribute("x-trap", "false");
 
       cleanup();
 
