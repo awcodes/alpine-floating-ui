@@ -1875,7 +1875,7 @@
       const atTrigger = component.querySelectorAll(`[\\@click^="$refs.${refName}"]`);
       const xTrigger = component.querySelectorAll(`[x-on\\:click^="$refs.${refName}"]`);
       panel.style.setProperty("display", "none");
-      setupA11y(component, [...atTrigger, ...xTrigger][0], panel);
+      setupA11y([...atTrigger, ...xTrigger][0], panel);
       panel._x_isShown = false;
       panel.trigger = null;
       if (!panel._x_doHide)

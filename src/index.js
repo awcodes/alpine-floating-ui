@@ -152,7 +152,7 @@ export default function (Alpine) {
 
     panel.style.setProperty("display", "none");
 
-    setupA11y(component, [...atTrigger, ...xTrigger][0], panel);
+    setupA11y([...atTrigger, ...xTrigger][0], panel);
 
     panel._x_isShown = false;
     panel.trigger = null;
