@@ -1739,11 +1739,9 @@ var buildDirectiveConfigFromModifiers = (modifiers, settings) => {
     config.float.middleware.push(hide2(settings["hide"]));
   }
   if (modifiers.includes("size")) {
-    console.log(settings["size"]);
     config.float.middleware.push(size2({
       apply({ availableWidth, availableHeight, elements }) {
         var _a, _b, _c, _d;
-        console.log(settings["size"]);
         Object.assign(elements.floating.style, {
           maxWidth: `${(_b = (_a = settings["size"]) == null ? void 0 : _a.availableWidth) != null ? _b : availableWidth}px`,
           maxHeight: `${(_d = (_c = settings["size"]) == null ? void 0 : _c.availableHeight) != null ? _d : availableHeight}px`
@@ -1903,7 +1901,7 @@ function src_default(Alpine) {
     const atTrigger = component.querySelectorAll(`[\\@click^="$refs.${refName}"]`);
     const xTrigger = component.querySelectorAll(`[x-on\\:click^="$refs.${refName}"]`);
     panel.style.setProperty("display", "none");
-    setupA11y(component, [...atTrigger, ...xTrigger][0], panel);
+    setupA11y([...atTrigger, ...xTrigger][0], panel);
     panel._x_isShown = false;
     panel.trigger = null;
     if (!panel._x_doHide)
