@@ -1739,7 +1739,15 @@ var buildDirectiveConfigFromModifiers = (modifiers, settings) => {
     config.float.middleware.push(hide2(settings["hide"]));
   }
   if (modifiers.includes("size")) {
-    config.float.middleware.push(size2(settings["size"]));
+    config.float.middleware.push(size2({
+      apply({ availableWidth, availableHeight, elements }) {
+        var _a, _b, _c, _d;
+        Object.assign(elements.floating.style, {
+          maxWidth: `${(_b = (_a = settings["size"]) == null ? void 0 : _a.availableWidth) != null ? _b : availableWidth}px`,
+          maxHeight: `${(_d = (_c = settings["size"]) == null ? void 0 : _c.availableHeight) != null ? _d : availableHeight}px`
+        });
+      }
+    }));
   }
   return config;
 };
@@ -1848,7 +1856,6 @@ function src_default(Alpine) {
               [staticSide]: "-4px"
             });
           }
-          console.log(config);
           if (middlewareData.hide) {
             const { referenceHidden } = middlewareData.hide;
             Object.assign(panel.style, {
