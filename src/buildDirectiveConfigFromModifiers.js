@@ -57,11 +57,23 @@ export const buildDirectiveConfigFromModifiers = (modifiers, settings) => {
   }
   
   if (modifiers.includes("size")) {
+    const width = settings['size']?.availableWidth ?? null;
+    const height = settings['size']?.availableHeight ?? null;
+
+    if (width) {
+      delete settings['size'].availableWidth;
+    }
+
+    if (height) {
+      delete settings['size'].availableHeight;
+    }
+
     config.float.middleware.push(size({
+      ...settings['size'],
       apply({availableWidth, availableHeight, elements}) {
         Object.assign(elements.floating.style, {
-          maxWidth: `${settings["size"]?.availableWidth ?? availableWidth}px`,
-          maxHeight: `${settings["size"]?.availableHeight ?? availableHeight}px`,
+          maxWidth: `${width ?? availableWidth}px`,
+          maxHeight: `${height ?? availableHeight}px`,
         });
       },
     }));

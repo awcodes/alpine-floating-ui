@@ -1695,6 +1695,7 @@ var buildConfigFromModifiers = (modifiers) => {
 
 // src/buildDirectiveConfigFromModifiers.js
 var buildDirectiveConfigFromModifiers = (modifiers, settings) => {
+  var _a, _b, _c, _d;
   const config = {
     component: {
       trap: false
@@ -1739,12 +1740,20 @@ var buildDirectiveConfigFromModifiers = (modifiers, settings) => {
     config.float.middleware.push(hide2(settings["hide"]));
   }
   if (modifiers.includes("size")) {
+    const width = (_b = (_a = settings["size"]) == null ? void 0 : _a.availableWidth) != null ? _b : null;
+    const height = (_d = (_c = settings["size"]) == null ? void 0 : _c.availableHeight) != null ? _d : null;
+    if (width) {
+      delete settings["size"].availableWidth;
+    }
+    if (height) {
+      delete settings["size"].availableHeight;
+    }
     config.float.middleware.push(size2({
+      ...settings["size"],
       apply({ availableWidth, availableHeight, elements }) {
-        var _a, _b, _c, _d;
         Object.assign(elements.floating.style, {
-          maxWidth: `${(_b = (_a = settings["size"]) == null ? void 0 : _a.availableWidth) != null ? _b : availableWidth}px`,
-          maxHeight: `${(_d = (_c = settings["size"]) == null ? void 0 : _c.availableHeight) != null ? _d : availableHeight}px`
+          maxWidth: `${width != null ? width : availableWidth}px`,
+          maxHeight: `${height != null ? height : availableHeight}px`
         });
       }
     }));
@@ -1801,13 +1810,6 @@ function src_default(Alpine) {
     panel.setAttribute("aria-modal", true);
     panel.setAttribute("role", "dialog");
   }
-  const atMagicTrigger = document.querySelectorAll('[\\@click^="$float"]');
-  const xMagicTrigger = document.querySelectorAll('[x-on\\:click^="$float"]');
-  [...atMagicTrigger, ...xMagicTrigger].forEach((trigger) => {
-    const component = trigger.parentElement.closest("[x-data]");
-    const panel = component.querySelector('[x-ref="panel"]');
-    setupA11y(trigger, panel);
-  });
   Alpine.magic("float", (el) => {
     return (modifiers = {}, settings = {}) => {
       const options = { ...defaultOptions, ...settings };
@@ -1815,6 +1817,7 @@ function src_default(Alpine) {
       const trigger = el;
       const component = el.parentElement.closest("[x-data]");
       const panel = component.querySelector('[x-ref="panel"]');
+      setupA11y(trigger, panel);
       function isFloating() {
         return panel.style.display == "block";
       }

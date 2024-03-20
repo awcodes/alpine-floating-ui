@@ -1715,11 +1715,20 @@
       config.float.middleware.push(hide2(settings["hide"]));
     }
     if (modifiers.includes("size")) {
+      const width = settings["size"]?.availableWidth ?? null;
+      const height = settings["size"]?.availableHeight ?? null;
+      if (width) {
+        delete settings["size"].availableWidth;
+      }
+      if (height) {
+        delete settings["size"].availableHeight;
+      }
       config.float.middleware.push(size2({
+        ...settings["size"],
         apply({ availableWidth, availableHeight, elements }) {
           Object.assign(elements.floating.style, {
-            maxWidth: `${settings["size"]?.availableWidth ?? availableWidth}px`,
-            maxHeight: `${settings["size"]?.availableHeight ?? availableHeight}px`
+            maxWidth: `${width ?? availableWidth}px`,
+            maxHeight: `${height ?? availableHeight}px`
           });
         }
       }));
@@ -1776,13 +1785,6 @@
       panel.setAttribute("aria-modal", true);
       panel.setAttribute("role", "dialog");
     }
-    const atMagicTrigger = document.querySelectorAll('[\\@click^="$float"]');
-    const xMagicTrigger = document.querySelectorAll('[x-on\\:click^="$float"]');
-    [...atMagicTrigger, ...xMagicTrigger].forEach((trigger) => {
-      const component = trigger.parentElement.closest("[x-data]");
-      const panel = component.querySelector('[x-ref="panel"]');
-      setupA11y(trigger, panel);
-    });
     Alpine.magic("float", (el) => {
       return (modifiers = {}, settings = {}) => {
         const options = { ...defaultOptions, ...settings };
@@ -1790,6 +1792,7 @@
         const trigger = el;
         const component = el.parentElement.closest("[x-data]");
         const panel = component.querySelector('[x-ref="panel"]');
+        setupA11y(trigger, panel);
         function isFloating() {
           return panel.style.display == "block";
         }
@@ -1978,7 +1981,7 @@
   }
 
   // builds/cdn.js
-  document.addEventListener("alpine:initializing", () => {
+  document.addEventListener("alpine:init", () => {
     src_default(window.Alpine);
   });
 })();

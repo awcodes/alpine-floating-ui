@@ -29,18 +29,6 @@ export default function (Alpine) {
     panel.setAttribute("role", "dialog");
   }
 
-  /**
-   * set up a11y for magic instances
-   */
-  const atMagicTrigger = document.querySelectorAll('[\\@click^="$float"]');
-  const xMagicTrigger = document.querySelectorAll('[x-on\\:click^="$float"]');
-
-  [...atMagicTrigger, ...xMagicTrigger].forEach((trigger) => {
-    const component = trigger.parentElement.closest("[x-data]");
-    const panel = component.querySelector('[x-ref="panel"]');
-    setupA11y(trigger, panel);
-  });
-
   Alpine.magic("float", (el) => {
     return (modifiers = {}, settings = {}) => {
       const options = { ...defaultOptions, ...settings };
@@ -49,6 +37,8 @@ export default function (Alpine) {
       const trigger = el;
       const component = el.parentElement.closest("[x-data]");
       const panel = component.querySelector('[x-ref="panel"]');
+
+      setupA11y(trigger, panel);
 
       function isFloating() {
         return panel.style.display == "block";
@@ -159,7 +149,7 @@ export default function (Alpine) {
 
     if (!panel._x_doHide)
       panel._x_doHide = () => {
-        panel.style.setProperty("display", "none", modifiers.includes("important") ? "important" : undefined);
+          panel.style.setProperty("display", "none", modifiers.includes("important") ? "important" : undefined);
       };
 
     if (!panel._x_doShow)
