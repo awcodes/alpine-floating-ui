@@ -26,7 +26,7 @@ export const buildConfigFromModifiers = (modifiers) => {
     config.placement = getModifierArgument("placement");
   }
 
-  if (keys.includes("autoPlacement") && !keys.includes('flip')) {
+  if (keys.includes("auto-placement") && !keys.includes('flip')) {
     config.middleware.push(autoPlacement(getModifierArgument("autoPlacement")));
   }
 

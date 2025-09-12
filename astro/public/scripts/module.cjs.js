@@ -1669,7 +1669,7 @@ var buildConfigFromModifiers = (modifiers) => {
   if (keys.includes("placement")) {
     config.placement = getModifierArgument("placement");
   }
-  if (keys.includes("autoPlacement") && !keys.includes("flip")) {
+  if (keys.includes("auto-placement") && !keys.includes("flip")) {
     config.middleware.push(autoPlacement2(getModifierArgument("autoPlacement")));
   }
   if (keys.includes("flip")) {
@@ -1721,7 +1721,7 @@ var buildDirectiveConfigFromModifiers = (modifiers, settings) => {
   if (modifiers.includes("placement")) {
     config.float.placement = getModifierArgument("placement");
   }
-  if (modifiers.includes("autoPlacement") && !modifiers.includes("flip")) {
+  if (modifiers.includes("auto-placement") && !modifiers.includes("flip")) {
     config.float.middleware.push(autoPlacement2(settings["autoPlacement"]));
   }
   if (modifiers.includes("flip")) {
