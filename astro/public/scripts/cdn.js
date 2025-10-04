@@ -1645,7 +1645,7 @@
     if (keys.includes("placement")) {
       config.placement = getModifierArgument("placement");
     }
-    if (keys.includes("autoPlacement") && !keys.includes("flip")) {
+    if (keys.some((key) => /^auto-?placement$/i.test(key)) && !keys.includes("flip")) {
       config.middleware.push(autoPlacement2(getModifierArgument("autoPlacement")));
     }
     if (keys.includes("flip")) {
@@ -1696,7 +1696,7 @@
     if (modifiers.includes("placement")) {
       config.float.placement = getModifierArgument("placement");
     }
-    if (modifiers.includes("autoPlacement") && !modifiers.includes("flip")) {
+    if (modifiers.some((key) => /^auto-?placement$/i.test(key)) && !modifiers.includes("flip")) {
       config.float.middleware.push(autoPlacement2(settings["autoPlacement"]));
     }
     if (modifiers.includes("flip")) {

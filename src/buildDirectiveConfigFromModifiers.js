@@ -32,7 +32,7 @@ export const buildDirectiveConfigFromModifiers = (modifiers, settings) => {
     config.float.placement = getModifierArgument("placement");
   }
 
-  if (modifiers.includes("autoPlacement") && !modifiers.includes("flip")) {
+  if (modifiers.some(key => /^auto-?placement$/i.test(key)) && !modifiers.includes("flip")) {
     config.float.middleware.push(autoPlacement(settings["autoPlacement"]));
   }
 
